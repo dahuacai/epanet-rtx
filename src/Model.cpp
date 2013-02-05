@@ -318,9 +318,9 @@ void Model::runExtendedPeriod(time_t start, time_t end) {
     // simulate this period, find the next timestep boundary.
     solveSimulation(simulationTime);
     // tell each element to update its derived states (simulation-computed values)
-    saveHydraulicStates(simulationTime);
+    //saveHydraulicStates(simulationTime);
     // get time to next simulation period
-    nextSimulationTime = nextHydraulicStep(simulationTime);
+    //nextSimulationTime = nextHydraulicStep(simulationTime);
     nextClockTime = _regularMasterClock->timeAfter(simulationTime);
     stepToTime = RTX_MIN(nextClockTime, nextSimulationTime);
     
@@ -332,6 +332,36 @@ void Model::runExtendedPeriod(time_t start, time_t end) {
   
 }
 
+//LT - HMW 2/1/13
+void Model::runExtendedPeriodLT(time_t start, time_t end) {
+  time_t simulationTime = start;
+  time_t nextClockTime = start;
+  time_t nextSimulationTime = start;
+  time_t stepToTime = start;
+  while (simulationTime < end) {
+    // get parameters from the RTX elements, and pull them into the simulation
+    setSimulationParameters(simulationTime);
+    
+    setCurrentSimulationTime(simulationTime);
+
+    // get time to next simulation period
+    //nextSimulationTime = nextHydraulicStep(simulationTime);
+    
+    nextClockTime = _regularMasterClock->timeAfter(simulationTime);
+    stepToTime = RTX_MIN(nextClockTime, simulationTime);
+    
+    // simulate this period, find the next timestep boundary.
+    stepSimulationLT(stepToTime);
+  
+    // tell each element to update its derived states (simulation-computed values)
+    //saveHydraulicStates(simulationTime);
+    saveHydraulicStates(stepToTime); //??? when to save ???
+   
+    simulationTime = currentSimulationTime();
+    //cout<<"sim time:"<<simulationTime<<" end time:"<<end<<" step2time:"<<stepToTime<<endl;
+  }
+ 
+}
 
 void Model::setHydraulicTimeStep(int seconds) {
   _regularMasterClock.reset( new Clock(seconds) );

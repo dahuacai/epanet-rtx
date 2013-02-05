@@ -276,9 +276,10 @@ void EpanetModel::loadModelFromFile(const std::string& filename) throw(RtxExcept
     
     this->setHydraulicTimeStep((int)enTimeStep);
     
-    ENcheck(ENopenH(), "ENopenH");
+    ENinitialize();
     
-    ENcheck(ENinitH(10), "ENinitH");
+    //ENcheck(ENopenH(), "ENopenH");
+    //ENcheck(ENinitH(10), "ENinitH");
     
   }
   catch(string error) {
@@ -288,6 +289,11 @@ void EpanetModel::loadModelFromFile(const std::string& filename) throw(RtxExcept
   
 }
 
+void EpanetModel::ENinitialize(){
+  ENcheck(ENopenH(), "ENopenH");
+  ENcheck(ENinitH(10), "ENinitH");
+  
+}
 void EpanetModel::overrideControls() throw(RTX::RtxException) {
   // set up counting variables for creating model elements.
   int nodeCount, tankCount;
@@ -444,6 +450,27 @@ time_t EpanetModel::nextHydraulicStep(time_t time) {
 
 // evolve tank levels
 void EpanetModel::stepSimulation(time_t time) {
+  long step = (long)(time - currentSimulationTime());
+  
+  //std::cout << "set step to: " << step << std::endl;
+  
+  //ENcheck( ENsettimeparam(EN_HYDSTEP, step), "ENsettimeparam(EN_HYDSTEP)" );
+  ENcheck( ENnextH(&step), "ENnexH()" );
+  double value;
+
+  ENcheck( ENgetnodevalue(2, EN_HEAD, &value), "ENgetnodevalue" );
+  cout << "value :"<<value<<" step:"<<step<<" time:"<<time<<endl;
+
+  long supposedStep = time - currentSimulationTime();
+  if (step != supposedStep) {
+    // it's an intermediate step
+    //cerr << "model returned step: " << step << ", expecting " << supposedStep << endl;
+  }
+  setCurrentSimulationTime( currentSimulationTime() + step );
+}
+
+//virtual ?
+void EpanetModel::stepSimulationLT(time_t time) {
   long step = (long)(time - currentSimulationTime());
   
   //std::cout << "set step to: " << step << std::endl;

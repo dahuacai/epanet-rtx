@@ -25,6 +25,8 @@ AUTHOR:     L. Rossman
 **  NOTE: The exportable functions that can be called
 **        via the DLL are prototyped in TOOLKIT.H.
 */
+#include <stdio.h> //HMW 2/1/13
+
 void    initpointers(void);               /* Initializes pointers       */
 int     allocdata(void);                  /* Allocates memory           */
 void    freeTmplist(STmplist *);          /* Frees items in linked list */

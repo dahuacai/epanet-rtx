@@ -163,7 +163,9 @@ AUTHOR:     L. Rossman
 
 
 // --- Declare the EPANET toolkit functions
-
+#if defined(__cplusplus)
+extern "C" {
+#endif
  int  DLLEXPORT ENepanet(char *, char *, char *, void (*) (char *));
  
  int  DLLEXPORT ENopen(char *, char *, char *);
@@ -235,3 +237,21 @@ AUTHOR:     L. Rossman
  int  DLLEXPORT ENgetcurve(int curveIndex, int* nValues, double **xValues, double **yValues); // !sph
 
  int  DLLEXPORT ENgetcoord(int , double *, double *);  // 06.02.2010 woohn
+  
+  //LemonTiger functions
+  /* See testLT.c for a LemonTiger test */
+  
+	//LT equivalent to ENopenH() + ENopenQ() + ENinitH() + ENinitQ()
+	int DLLEXPORT ENopeninitHQ();
+  
+	//LT equivalent to ENrunQ() + ENnextQ();
+	int DLLEXPORT ENrunnextHQ(long*, long*);
+  
+	//LT equivalent to ENrunQ() + ENstepQ();
+	int DLLEXPORT ENrunstepHQ(long*, long*);
+  
+	//LT equivalent to ENcloseH() + ENcloseQ();
+	int DLLEXPORT ENcloseHQ();
+#if defined(__cplusplus)
+}
+#endif

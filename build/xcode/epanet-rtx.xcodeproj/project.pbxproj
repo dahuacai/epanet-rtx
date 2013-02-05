@@ -91,6 +91,10 @@
 		22ED77D615878953002D67F1 /* Tank.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22ED77D515878953002D67F1 /* Tank.cpp */; };
 		22ED77D81587898D002D67F1 /* Reservoir.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22ED77D71587898D002D67F1 /* Reservoir.cpp */; };
 		22EFA1BD1471CEC4001102E0 /* rtxMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 22EFA1BC1471CEC4001102E0 /* rtxMacros.h */; };
+		8AB3BAFA16BB6DDE0058A6C2 /* EpanetLTmodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AB3BAF816BB6DDD0058A6C2 /* EpanetLTmodel.cpp */; };
+		8AB3BAFB16BB6DDE0058A6C2 /* EpanetLTmodel.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AB3BAF916BB6DDE0058A6C2 /* EpanetLTmodel.h */; };
+		8AB3BB0216BBD8BE0058A6C2 /* lemontiger.c in Sources */ = {isa = PBXBuildFile; fileRef = 8AB3BB0116BBD8BD0058A6C2 /* lemontiger.c */; };
+		8AB3BB0416BBD9D50058A6C2 /* lemontiger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AB3BB0316BBD9D30058A6C2 /* lemontiger.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -216,6 +220,11 @@
 		22ED77D515878953002D67F1 /* Tank.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Tank.cpp; path = ../../src/Tank.cpp; sourceTree = "<group>"; };
 		22ED77D71587898D002D67F1 /* Reservoir.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Reservoir.cpp; path = ../../src/Reservoir.cpp; sourceTree = "<group>"; };
 		22EFA1BC1471CEC4001102E0 /* rtxMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rtxMacros.h; path = ../../src/rtxMacros.h; sourceTree = "<group>"; };
+		8AB3BAF816BB6DDD0058A6C2 /* EpanetLTmodel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EpanetLTmodel.cpp; path = ../../src/EpanetLTmodel.cpp; sourceTree = "<group>"; };
+		8AB3BAF916BB6DDE0058A6C2 /* EpanetLTmodel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EpanetLTmodel.h; path = ../../src/EpanetLTmodel.h; sourceTree = "<group>"; };
+		8AB3BB0116BBD8BD0058A6C2 /* lemontiger.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lemontiger.c; sourceTree = "<group>"; };
+		8AB3BB0316BBD9D30058A6C2 /* lemontiger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lemontiger.h; sourceTree = "<group>"; };
+		8AE6039616BC95D2003C6F62 /* sampletown_lt.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sampletown_lt.cfg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -270,6 +279,8 @@
 		222A41A4151115820012D2A5 /* epanet engine */ = {
 			isa = PBXGroup;
 			children = (
+				8AB3BB0116BBD8BD0058A6C2 /* lemontiger.c */,
+				8AB3BB0316BBD9D30058A6C2 /* lemontiger.h */,
 				222A41CD1511173C0012D2A5 /* toolkit.h */,
 				222A41BC1511173C0012D2A5 /* epanet.c */,
 				222A41BB1511173C0012D2A5 /* enumstxt.h */,
@@ -350,6 +361,8 @@
 				22909B3B147DDE2A00945449 /* EpanetModel.cpp */,
 				221A19CB1579111900F0699E /* EpanetSyntheticModel.h */,
 				221A19CE1579112B00F0699E /* EpanetSyntheticModel.cpp */,
+				8AB3BAF916BB6DDE0058A6C2 /* EpanetLTmodel.h */,
+				8AB3BAF816BB6DDD0058A6C2 /* EpanetLTmodel.cpp */,
 			);
 			name = "Model Classes";
 			sourceTree = "<group>";
@@ -357,6 +370,7 @@
 		228F6B6514857FD6007383D4 /* input files */ = {
 			isa = PBXGroup;
 			children = (
+				8AE6039616BC95D2003C6F62 /* sampletown_lt.cfg */,
 				221C06C616077FD200B8969C /* sample.cfg */,
 				221C06C816077FD200B8969C /* sampletown_synthetic.cfg */,
 				221C06C716077FD200B8969C /* sampletown_realtime.cfg */,
@@ -551,6 +565,8 @@
 				22E2962C16010A65003D378A /* Units.h in Headers */,
 				22707A9716309D4100FEB4DD /* OffsetTimeSeries.h in Headers */,
 				2251DCA7168105AA00515EBF /* IrregularClock.h in Headers */,
+				8AB3BAFB16BB6DDE0058A6C2 /* EpanetLTmodel.h in Headers */,
+				8AB3BB0416BBD9D50058A6C2 /* lemontiger.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -690,6 +706,8 @@
 				22253D8F16022FB6002F7256 /* CurveFunction.cpp in Sources */,
 				22707A9616309D4100FEB4DD /* OffsetTimeSeries.cpp in Sources */,
 				2251DCA6168105AA00515EBF /* IrregularClock.cpp in Sources */,
+				8AB3BAFA16BB6DDE0058A6C2 /* EpanetLTmodel.cpp in Sources */,
+				8AB3BB0216BBD8BE0058A6C2 /* lemontiger.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

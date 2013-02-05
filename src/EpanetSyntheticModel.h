@@ -31,6 +31,7 @@ namespace RTX {
   protected:
     virtual void solveSimulation(time_t time);
     virtual time_t nextHydraulicStep(time_t time);
+    
   private:
     time_t _startTime;
   };

@@ -127,7 +127,7 @@ int main(int argc, const char * argv[])
   // Great. Now let's say I want to persist some of this TimeSeries data. Then what?
   // I can use the MysqlPointRecord (fill in your credentials below):
   MysqlPointRecord::sharedPointer dbRecord(new MysqlPointRecord());
-  dbRecord->setConnectionString("HOST=tcp://localhost;UID=rtx_db_agent;PWD=rtx_db_agent;DB=rtx_demo_db");
+  dbRecord->setConnectionString("HOST=tcp://localhost;UID=rtx_db_agent;PWD=rtx_db_agent;DB=rtx_demo_db2");
   dbRecord->connect();
   if (dbRecord->isConnected()) {
     // empty out any previous data

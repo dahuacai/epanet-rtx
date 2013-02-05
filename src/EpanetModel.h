@@ -33,6 +33,8 @@ namespace RTX {
     EpanetModel();
     ~EpanetModel();
     void loadModelFromFile(const std::string& filename) throw(RtxException);
+    virtual void ENinitialize();
+
     virtual void overrideControls() throw(RtxException);
     virtual std::ostream& toStream(std::ostream &stream);
 
@@ -59,6 +61,8 @@ namespace RTX {
     virtual void solveSimulation(time_t time);
     virtual time_t nextHydraulicStep(time_t time);
     virtual void stepSimulation(time_t time);
+    virtual void stepSimulationLT(time_t time);
+
     virtual int iterations(time_t time);
     virtual int relativeError(time_t time);
     virtual void setHydraulicTimeStep(int seconds);

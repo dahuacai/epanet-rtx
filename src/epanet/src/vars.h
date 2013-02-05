@@ -11,15 +11,22 @@ AUTHOR:     L. Rossman
                                                                      
 ************************************************************************
 */
-EXTERN FILE     *InFile,               /* Input file pointer           */
+#ifndef VARS_H
+#define VARS_H
+
+#include <stdio.h>
+#include "hash.h"
+//Extern is deleted by HMW 2/1/13    
+
+ FILE     *InFile,               /* Input file pointer           */
                 *OutFile,              /* Output file pointer          */
                 *RptFile,              /* Report file pointer          */
                 *HydFile,              /* Hydraulics file pointer      */
                 *TmpOutFile;           /* Temporary file handle        */
-EXTERN long     HydOffset,             /* Hydraulics file byte offset  */
+ long     HydOffset,             /* Hydraulics file byte offset  */
                 OutOffset1,            /* 1st output file byte offset  */
                 OutOffset2;            /* 2nd output file byte offset  */
-EXTERN char     Msg[MAXMSG+1],         /* Text of output message       */
+ char     Msg[MAXMSG+1],         /* Text of output message       */
                 InpFname[MAXFNAME+1],  /* Input file name              */
                 Rpt1Fname[MAXFNAME+1], /* Primary report file name     */
                 Rpt2Fname[MAXFNAME+1], /* Secondary report file name   */
@@ -59,7 +66,7 @@ EXTERN char     Msg[MAXMSG+1],         /* Text of output message       */
                 OpenQflag,             /* Quality system opened flag   */
                 SaveQflag,             /* Quality results saved flag   */
                 Saveflag;              /* General purpose save flag    */
-EXTERN int      MaxNodes,              /* Node count from input file   */
+ int      MaxNodes,              /* Node count from input file   */
                 MaxLinks,              /* Link count from input file   */
                 MaxJuncs,              /* Junction count               */
                 MaxPipes,              /* Pipe count                   */
@@ -93,7 +100,7 @@ EXTERN int      MaxNodes,              /* Node count from input file   */
                 PageSize,              /* Lines/page in output report  */
                 CheckFreq,             /* Hydraulics solver parameter  */
                 MaxCheck;              /* Hydraulics solver parameter  */
-EXTERN double   Ucf[MAXVAR],           /* Unit conversion factors      */
+ double   Ucf[MAXVAR],           /* Unit conversion factors      */
                 Ctol,                  /* Water quality tolerance      */
                 Htol,                  /* Hydraulic head tolerance     */
                 Qtol,                  /* Flow rate tolerance          */
@@ -122,7 +129,7 @@ EXTERN double   Ucf[MAXVAR],           /* Unit conversion factors      */
                 Wwall,                 /* Avg. wall reaction rate      */
                 Wtank,                 /* Avg. tank reaction rate      */
                 Wsource;               /* Avg. mass inflow             */
-EXTERN long     Tstart,                /* Starting time of day (sec)   */
+ long     Tstart,                /* Starting time of day (sec)   */
                 Hstep,                 /* Nominal hyd. time step (sec) */
                 Qstep,                 /* Quality time step (sec)      */
                 Pstep,                 /* Time pattern time step (sec) */
@@ -135,35 +142,36 @@ EXTERN long     Tstart,                /* Starting time of day (sec)   */
                 Hydstep,               /* Actual hydraulic time step   */
                 Rulestep,              /* Rule evaluation time step    */
                 Dur;                   /* Duration of simulation (sec) */
-EXTERN SField   Field[MAXVAR];         /* Output reporting fields      */
+ SField   Field[MAXVAR];         /* Output reporting fields      */
 
 /* Array pointers not allocated and freed in same routine */
-EXTERN char     *S,                    /* Link status                  */
+ char     *S,                    /* Link status                  */
                 *OldStat;              /* Previous link/tank status    */
-EXTERN double   *D,                    /* Node actual demand           */
+ double   *D,                    /* Node actual demand           */
                 *C,                    /* Node actual quality          */
                 *E,                    /* Emitter flows                */
                 *K,                    /* Link settings                */
                 *Q,                    /* Link flows                   */
                 *R,                    /* Pipe reaction rate           */
                 *X;                    /* General purpose array        */
-EXTERN double   *H;                    /* Node heads                   */
-EXTERN STmplist *Patlist;              /* Temporary time pattern list  */ 
-EXTERN STmplist *Curvelist;            /* Temporary list of curves     */
-EXTERN STmplist *Coordlist;            /* Temporary list of coordinates*/
-EXTERN Spattern *Pattern;              /* Time patterns                */
-EXTERN Scurve   *Curve;                /* Curve data                   */
-EXTERN Scoord   *Coord;                /* Coord data                   */ //06.02.2010 woohn
-EXTERN Snode    *Node;                 /* Node data                    */
-EXTERN Slink    *Link;                 /* Link data                    */
-EXTERN Stank    *Tank;                 /* Tank data                    */
-EXTERN Spump    *Pump;                 /* Pump data                    */
-EXTERN Svalve   *Valve;                /* Valve data                   */
-EXTERN Scontrol *Control;              /* Control data                 */
-EXTERN HTtable  *Nht, *Lht;            /* Hash tables for ID labels    */
-EXTERN Padjlist *Adjlist;              /* Node adjacency lists         */
+                *XC;                    /* General purpose array    WQ  */ //2/1/13 woohn
+ double   *H;                    /* Node heads                   */
+ STmplist *Patlist;              /* Temporary time pattern list  */
+ STmplist *Curvelist;            /* Temporary list of curves     */
+ STmplist *Coordlist;            /* Temporary list of coordinates*/
+ Spattern *Pattern;              /* Time patterns                */
+ Scurve   *Curve;                /* Curve data                   */
+ Scoord   *Coord;                /* Coord data                   */ //06.02.2010 woohn
+ Snode    *Node;                 /* Node data                    */
+ Slink    *Link;                 /* Link data                    */
+ Stank    *Tank;                 /* Tank data                    */
+ Spump    *Pump;                 /* Pump data                    */
+ Svalve   *Valve;                /* Valve data                   */
+ Scontrol *Control;              /* Control data                 */
+ HTtable  *Nht, *Lht;            /* Hash tables for ID labels    */
+ Padjlist *Adjlist;              /* Node adjacency lists         */
 
-EXTERN int _relativeError, _iterations;
+ int _relativeError, _iterations;
 /*
 ** NOTE: Hydraulic analysis of the pipe network at a given point in time
 **       is done by repeatedly solving a linearized version of the 
@@ -184,18 +192,19 @@ EXTERN int _relativeError, _iterations;
 **       The following arrays are used to efficiently manage this sparsity:
 */
 
-EXTERN double   *Aii,        /* Diagonal coeffs. of A               */
+ double   *Aii,        /* Diagonal coeffs. of A               */
                 *Aij,        /* Non-zero, off-diagonal coeffs. of A */
                 *F;          /* Right hand side coeffs.             */
-EXTERN double   *P,          /* Inverse headloss derivatives        */
+ double   *P,          /* Inverse headloss derivatives        */
                 *Y;          /* Flow correction factors             */
-EXTERN int      *Order,      /* Node-to-row of A                    */
+ int      *Order,      /* Node-to-row of A                    */
                 *Row,        /* Row-to-node of A                    */
                 *Ndx;        /* Index of link's coeff. in Aij       */
 /*
 ** The following arrays store the positions of the non-zero coeffs.    
 ** of the lower triangular portion of A whose values are stored in Aij:
 */
-EXTERN int      *XLNZ,       /* Start position of each column in NZSUB  */
+ int      *XLNZ,       /* Start position of each column in NZSUB  */
                 *NZSUB,      /* Row index of each coeff. in each column */
                 *LNZ;        /* Position of each coeff. in Aij array    */
+#endif

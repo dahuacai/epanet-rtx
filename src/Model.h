@@ -46,10 +46,12 @@ namespace RTX {
     RTX_SHARED_POINTER(Model);
     
     virtual void loadModelFromFile(const std::string& filename) throw(RtxException);
+    virtual void ENinitialize()=0;
     std::string modelFile();
     virtual void overrideControls() throw(RtxException);
     void runSinglePeriod(time_t time);
     void runExtendedPeriod(time_t start, time_t end);
+    void runExtendedPeriodLT(time_t start, time_t end); //LT - HMW 2/1/13
     void setStorage(PointRecord::sharedPointer record);
     void setParameterSource(PointRecord::sharedPointer record);
     
@@ -122,6 +124,7 @@ namespace RTX {
     virtual void solveSimulation(time_t time) = 0;
     virtual time_t nextHydraulicStep(time_t time) = 0;
     virtual void stepSimulation(time_t time) = 0;
+    virtual void stepSimulationLT(time_t time) = 0; //LT - HMW 2/1/13
     virtual int iterations(time_t time) = 0;
     virtual int relativeError(time_t time) = 0;
     

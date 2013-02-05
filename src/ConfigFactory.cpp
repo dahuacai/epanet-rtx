@@ -21,6 +21,7 @@
 #include "Zone.h"
 #include "EpanetModel.h"
 #include "EpanetSyntheticModel.h"
+#include "EpanetLTmodel.h" //LT - HMW 2/1/13
 
 using namespace RTX;
 using namespace libconfig;
@@ -488,6 +489,17 @@ void ConfigFactory::createModel(Setting& setting) {
   if ( RTX_STRINGS_ARE_EQUAL(modelType, "synthetic_epanet") ) {
     _model.reset( new EpanetSyntheticModel() );
     _model->loadModelFromFile(modelPath.string());
+
+    configureElements(_model->elements());
+  }
+ 
+  //LT - HMW 2/1/13
+  if ( RTX_STRINGS_ARE_EQUAL(modelType, "epanetLT") ){
+    _model.reset( new EpanetLTmodel() );
+    // load the model
+    _model->loadModelFromFile(modelPath.string());
+    // hook up the model's elements to timeseries objects
+    //_model->overrideControls();
     configureElements(_model->elements());
   }
   

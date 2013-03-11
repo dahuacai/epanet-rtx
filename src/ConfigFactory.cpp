@@ -84,8 +84,10 @@ void ConfigFactory::loadConfigFile(const std::string& path) {
   
   // use libconfig api to open config file
   try
-  {
-    _configuration.readFile(configPath.c_str());
+  { 
+	  char buffer[_MAX_PATH];
+	wcstombs ( buffer, configPath.c_str(), sizeof(buffer) );
+    _configuration.readFile(buffer);
   }
   catch(const FileIOException &fioex)
   {
@@ -102,7 +104,7 @@ void ConfigFactory::loadConfigFile(const std::string& path) {
   Setting& root = _configuration.getRoot();
   
   // get the version number
-  std::string version = _configuration.lookup("version");
+  const char* version = _configuration.lookup("version");
   // todo -- check version number against CONFIGVERSION
   
   
@@ -198,7 +200,7 @@ void ConfigFactory::createPointRecords(Setting& records) {
   // loop through the records and create them.
   for (int iRecord = 0; iRecord < recordCount; ++iRecord) {
     Setting& record = records[iRecord];
-    string recordName = record["name"];
+    string recordName = (const char*)(record["name"]);
     PointRecord::sharedPointer pointRecord = createPointRecordOfType(record);
     if (pointRecord) {
       _pointRecordList[recordName] = pointRecord;
@@ -226,15 +228,15 @@ PointRecord::sharedPointer ConfigFactory::createPointRecordOfType(libconfig::Set
 PointRecord::sharedPointer ConfigFactory::createScadaPointRecord(libconfig::Setting &setting) {
   
   // create the initialization string for the scada point record.
-  string initString = setting["connection"];
-  string name = setting["name"];
+  string initString = (const char*)setting["connection"];
+  string name = (const char*)setting["name"];
   
   libconfig::Setting& syntax = setting["querySyntax"];
-  string table    = syntax["Table"];
-  string dateCol  = syntax["DateColumn"];
-  string tagCol   = syntax["TagColumn"];
-  string valueCol = syntax["ValueColumn"];
-  string qualCol  = syntax["QualityColumn"];
+  string table    = (const char*)syntax["Table"];
+  string dateCol  = (const char*)syntax["DateColumn"];
+  string tagCol   = (const char*)syntax["TagColumn"];
+  string valueCol = (const char*)syntax["ValueColumn"];
+  string qualCol  = (const char*)syntax["QualityColumn"];
     
   ScadaPointRecord::sharedPointer pointRecord( new ScadaPointRecord() );
   pointRecord->setSyntax(table, dateCol, tagCol, valueCol, qualCol);
@@ -245,9 +247,9 @@ PointRecord::sharedPointer ConfigFactory::createScadaPointRecord(libconfig::Sett
 }
 
 PointRecord::sharedPointer ConfigFactory::createMySqlPointRecord(libconfig::Setting &setting) {
-  string name = setting["name"];
+  string name = (const char*)setting["name"];
   MysqlPointRecord::sharedPointer record( new MysqlPointRecord() );
-  string initString = setting["connection"];  record->setConnectionString(initString);
+  string initString = (const char*)setting["connection"];  record->setConnectionString(initString);
   record->connect();
   
   return record;
@@ -264,7 +266,7 @@ void ConfigFactory::createClocks(Setting& clockGroup) {
   int clockCount = clockGroup.getLength();
   for (int iClock = 0; iClock < clockCount; ++iClock) {
     Setting& clock = clockGroup[iClock];
-    string clockName = clock["name"];
+    string clockName = (const char*)clock["name"];
     int period = clock["period"];
     Clock::sharedPointer aClock( new Clock(period) );
     _clockList[clockName] = aClock;
@@ -282,7 +284,7 @@ void ConfigFactory::createTimeSeriesList(Setting& timeSeriesGroup) {
   // loop through the time series and create them.
   for (int iSeries = 0; iSeries < tsCount; ++iSeries) {
     Setting& series = timeSeriesGroup[iSeries];
-    string seriesName = series["name"];
+    string seriesName = (const char*)series["name"];
     TimeSeries::sharedPointer theTimeSeries = createTimeSeriesOfType(series);
     if (theTimeSeries != NULL) {
       _timeSeriesList[seriesName] = theTimeSeries;
@@ -353,7 +355,7 @@ void ConfigFactory::createTimeSeriesList(Setting& timeSeriesGroup) {
 }
 
 TimeSeries::sharedPointer ConfigFactory::createTimeSeriesOfType(libconfig::Setting &setting) {
-  std::string type = setting["type"];
+  std::string type = (const char*)setting["type"];
   if (_timeSeriesPointerMap.find(type) == _timeSeriesPointerMap.end()) {
     // not found
     std::cerr << "time series type " << type << " not implemented or not recognized" << std::endl;
@@ -365,12 +367,12 @@ TimeSeries::sharedPointer ConfigFactory::createTimeSeriesOfType(libconfig::Setti
 }
 
 void ConfigFactory::setGenericTimeSeriesProperties(TimeSeries::sharedPointer timeSeries, libconfig::Setting &setting) {
-  string myName = setting["name"];
+  string myName = (const char*)setting["name"];
   timeSeries->setName(myName);
   
   Units theUnits(RTX_DIMENSIONLESS);
   if (setting.exists("units")) {
-    string unitName = setting["units"];
+    string unitName = (const char*)setting["units"];
     theUnits = Units::unitOfType(unitName);
   }
   timeSeries->setUnits(theUnits);
@@ -384,7 +386,7 @@ void ConfigFactory::setGenericTimeSeriesProperties(TimeSeries::sharedPointer tim
   // this means that the storage for the time series is probably external (scada / mysql).
   if (setting.exists("pointRecord")) {
     // TODO - test for existence of the actual point record.
-    std::string pointRecordName = setting["pointRecord"];
+    std::string pointRecordName = (const char*)setting["pointRecord"];
     PointRecord::sharedPointer pointRecord = _pointRecordList[setting["pointRecord"]];
     timeSeries->newCacheWithPointRecord(pointRecord);
   }
@@ -392,7 +394,7 @@ void ConfigFactory::setGenericTimeSeriesProperties(TimeSeries::sharedPointer tim
   // set any upstream sources. forward declarations are allowed, as these will be set only after all timeseries objects have been created.
   if (setting.exists("source")) {
     // this timeseries has an upstream source.
-    string sourceName = setting["source"];
+    string sourceName = (const char*)setting["source"];
     _timeSeriesSourceList[myName] = sourceName;
   }
   
@@ -422,7 +424,7 @@ TimeSeries::sharedPointer ConfigFactory::createAggregator(libconfig::Setting &se
   
   for (int iSource = 0; iSource < sourceCount; ++iSource) {
     Setting& thisSource = sources[iSource];
-    string sourceName = thisSource["source"];
+    string sourceName = (const char*)thisSource["source"];
     double multiplier;
     // set the multiplier if it's specified - otherwise, set to 1.
     if ( !thisSource.lookupValue("multiplier", multiplier) ) {
@@ -474,8 +476,8 @@ TimeSeries::sharedPointer ConfigFactory::createOffset(Setting &setting) {
 
 void ConfigFactory::createModel(Setting& setting) {
   
-  std::string modelType = setting["type"];
-  string modelFileName = setting["file"];
+  std::string modelType = (const char*)setting["type"];
+  string modelFileName = (const char*)setting["file"];
   boost::filesystem::path configPath(_configPath);
   boost::filesystem::path modelPath = configPath.parent_path();
   modelPath /= modelFileName;
@@ -507,7 +509,7 @@ Model::sharedPointer ConfigFactory::model() {
 void ConfigFactory::createSimulationDefaults(Setting& setting) {
   if (setting.exists("staterecord")) {
     _doesHaveStateRecord = true;
-    std::string defaultRecordName = setting["staterecord"];
+    std::string defaultRecordName = (const char*)setting["staterecord"];
     if (_pointRecordList.find(defaultRecordName) == _pointRecordList.end()) {
       std::cerr << "could not retrieve point record by name: " << defaultRecordName << std::endl;
     }
@@ -571,7 +573,7 @@ void ConfigFactory::configureElement(Element::sharedPointer element) {
   const int elementCount = elements.getLength();
   for (int iElement = 0; iElement < elementCount; ++iElement) {
     Setting& elementSetting = elements[iElement];
-    std::string modelID = elementSetting["model_id"];
+    std::string modelID = (const char*)elementSetting["model_id"];
     if ( RTX_STRINGS_ARE_EQUAL(modelID, name) ) {
       // great, a match.
       // configure the element with the proper states/parameters.
@@ -579,14 +581,14 @@ void ConfigFactory::configureElement(Element::sharedPointer element) {
       // todo - check if the type is in the pointer map
       
       // get the type of parameter
-      std::string parameterType = elementSetting["parameter"];
+      std::string parameterType = (const char*)elementSetting["parameter"];
       if (_parameterSetter.find(parameterType) == _parameterSetter.end()) {
         // no such parameter type
         std::cout << "could not find paramter type: " << parameterType << std::endl;
         return;
       }
       ParameterFunction fp = _parameterSetter[parameterType];
-      const string tsName = elementSetting["timeseries"];
+      const string tsName = (const char*)elementSetting["timeseries"];
       TimeSeries::sharedPointer series = _timeSeriesList[tsName];
       if (!series) {
         std::cerr << "could not find time series \"" << tsName << "\"." << std::endl;

@@ -11,7 +11,7 @@
 
 #include <string.h>
 #include <map>
-#include <tr1/unordered_map>
+#include <tr1/unordered_map.hpp>
 #include <time.h>
 #include <boost/foreach.hpp>
 #include "rtxExceptions.h"

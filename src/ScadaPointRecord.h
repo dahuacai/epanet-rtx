@@ -15,6 +15,10 @@
 
 #include <deque>
 
+#ifdef WIN32
+#include "windows.h"
+#endif
+
 #include <sql.h>
 #include <sqlext.h>
 

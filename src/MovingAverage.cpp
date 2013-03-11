@@ -20,7 +20,7 @@ using std::cout;
 using namespace boost::accumulators;
 
 
-MovingAverage::MovingAverage() : ModularTimeSeries::ModularTimeSeries() {
+MovingAverage::MovingAverage() {
   _windowSize = 7;
 }
 

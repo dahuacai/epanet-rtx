@@ -57,7 +57,7 @@ namespace RTX {
     };
     
   protected:
-    virtual std::vector<Point> selectRange(const std::string& identifier, time_t startTime, time_t endTime) {};
+    virtual std::vector<Point> selectRange(const std::string& identifier, time_t startTime, time_t endTime) =0 ;
     virtual void preFetchRange(const string& identifier, time_t start, time_t end);
     
   private:

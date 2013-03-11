@@ -410,7 +410,9 @@ time_t ScadaPointRecord::unixTime(SQL_TIMESTAMP_STRUCT sqlTime) {
   myUnixTime = mktime(&tmTimestamp);
 
   if (timeFormat() == UTC) {
+#ifndef WIN32
     myUnixTime += pTimestamp->tm_gmtoff;
+#endif
   }
   
   

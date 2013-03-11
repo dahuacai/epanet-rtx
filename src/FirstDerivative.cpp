@@ -10,7 +10,7 @@
 
 using namespace RTX;
 
-FirstDerivative::FirstDerivative() : ModularTimeSeries::ModularTimeSeries() {
+FirstDerivative::FirstDerivative() {
   
 }
 

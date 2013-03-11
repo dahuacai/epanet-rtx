@@ -37,6 +37,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Include;C:\Users\owner\Desktop\Research\CODE\libconfig-1.4.9\lib;C:\Program Files\MySQL\Connector C++ 1.1.2\include;C:\Program Files\MySQL\Connector C++ 1.1.2\include\cppconn</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib;C:\Users\owner\Desktop\Research\CODE\boost_1_53_0\stage\lib;C:\Users\owner\Desktop\Research\CODE\libconfig-1.4.9\Debug;C:\Program Files\MySQL\Connector C++ 1.1.2\lib</LibraryPath>
+    <LibraryWPath />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -48,6 +52,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>C:\Users\owner\Desktop\Research\CODE\boost_1_53_0\boost;C:\Users\owner\Desktop\Research\CODE\boost_1_53_0\;$(ProjectDir)\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -71,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\examples\conceptual\timeseries_demo.cpp" />
     <ClCompile Include="..\..\src\AggregatorTimeSeries.cpp" />
     <ClCompile Include="..\..\src\Clock.cpp" />
     <ClCompile Include="..\..\src\ConfigFactory.cpp" />
@@ -101,10 +107,8 @@
     <ClCompile Include="..\..\src\MysqlPointRecord.cpp" />
     <ClCompile Include="..\..\src\Node.cpp" />
     <ClCompile Include="..\..\src\OffsetTimeSeries.cpp" />
-    <ClCompile Include="..\..\src\PersistentContainer.cpp" />
     <ClCompile Include="..\..\src\Pipe.cpp" />
     <ClCompile Include="..\..\src\Point.cpp" />
-    <ClCompile Include="..\..\src\PointContainer.cpp" />
     <ClCompile Include="..\..\src\PointRecord.cpp" />
     <ClCompile Include="..\..\src\Pump.cpp" />
     <ClCompile Include="..\..\src\Resampler.cpp" />

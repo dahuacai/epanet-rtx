@@ -27,3 +27,47 @@ Debug/
 
 *.mode1v3
 *.mode2v3
+
+# Windows stuff
+
+# Visual Studio 2012
+*.suo
+*.sdf
+*.filters
+*.user
+*.cdf
+*.cache
+*.obj
+*.ilk
+*.resources
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.rsp
+*.pgc
+*.pgd
+*.meta
+*.tlog
+*.manifest
+*.res
+*.pch
+*.exp
+*.idb
+*.rep
+*.xdc
+*.pdb
+*_manifest.rc
+*.bsc
+*.sbr
+*.xml
+*.metagen
+*.bi
+*.opensdf
+*.dll
+*.lib
+*.log
+Debug/*
+Release/*
+
+

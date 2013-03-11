@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "epanet-rtx", "epanet-rtx.vcxproj", "{78327894-D62A-47E1-9C02-0CFFF8CB3D6D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{78327894-D62A-47E1-9C02-0CFFF8CB3D6D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{78327894-D62A-47E1-9C02-0CFFF8CB3D6D}.Debug|Win32.Build.0 = Debug|Win32
+		{78327894-D62A-47E1-9C02-0CFFF8CB3D6D}.Release|Win32.ActiveCfg = Release|Win32
+		{78327894-D62A-47E1-9C02-0CFFF8CB3D6D}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

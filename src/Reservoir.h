@@ -13,7 +13,7 @@
 
 namespace RTX {
   
-  class Reservoir : public Junction {
+  class  Reservoir : public Junction {
   public:
     RTX_SHARED_POINTER(Reservoir);
     Reservoir(const std::string& name);

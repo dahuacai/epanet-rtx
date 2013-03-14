@@ -1,7 +1,8 @@
-#include <math.h>
 
 #include "SineTimeSeries.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 using namespace RTX;
 using namespace std;

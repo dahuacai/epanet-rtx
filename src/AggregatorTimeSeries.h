@@ -24,7 +24,7 @@ namespace RTX {
    
    */
   
-  class AggregatorTimeSeries : public TimeSeries {
+  class  AggregatorTimeSeries : public TimeSeries {
   
   public:
     RTX_SHARED_POINTER(AggregatorTimeSeries);

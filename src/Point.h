@@ -20,7 +20,7 @@ namespace RTX {
 /*!
       The point class keeps track of a piece of measurement data; time, value, and quality.
 */
-  class Point {    
+  class  Point {    
   public:
     //! quality flag
     enum Qual_t { good, missing, estimated, forecasted, interpolated, constant };

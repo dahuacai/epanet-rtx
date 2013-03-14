@@ -68,7 +68,7 @@ namespace RTX {
   
   // TODO - split this into separate factory classes (for pointrecords, timeseries, model, etc?)
   
-  class ConfigFactory {
+  class  ConfigFactory {
   public:
     RTX_SHARED_POINTER(ConfigFactory);
     ConfigFactory();

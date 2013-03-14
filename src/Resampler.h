@@ -13,7 +13,7 @@
 
 namespace RTX {
   
-  class Resampler : public ModularTimeSeries {
+  class  Resampler : public ModularTimeSeries {
     
   public:
     RTX_SHARED_POINTER(Resampler);

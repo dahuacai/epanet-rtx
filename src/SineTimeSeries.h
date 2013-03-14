@@ -13,7 +13,7 @@
 
 namespace RTX {
   
-  class SineTimeSeries : public TimeSeries {
+  class  SineTimeSeries : public TimeSeries {
     
   public:
     RTX_SHARED_POINTER(SineTimeSeries);

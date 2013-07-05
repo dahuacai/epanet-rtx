@@ -340,6 +340,32 @@ std::vector<Pipe::sharedPointer> Zone::measuredInteriorPipes() {
   return _measuredInteriorPipes;
 }
 
+bool Zone::isMeasuredPipe(Pipe::sharedPointer pipe) {
+  if (_measuredBoundaryPipesDirectional.count(pipe) > 0) return true;
+  
+  std::vector<Pipe::sharedPointer>::iterator it;
+  for (it = _measuredInteriorPipes.begin(); it != _measuredInteriorPipes.end(); ++it) {
+    if (*it == pipe) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+bool Zone::isClosedPipe(Pipe::sharedPointer pipe) {
+  if (_closedBoundaryPipesDirectional.count(pipe) > 0) return true;
+  
+  std::vector<Pipe::sharedPointer>::iterator it;
+  for (it = _closedInteriorPipes.begin(); it != _closedInteriorPipes.end(); ++it) {
+    if (*it == pipe) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 void Zone::setDemand(TimeSeries::sharedPointer demand) {
   if (demand->units().isSameDimensionAs(RTX_CUBIC_METER_PER_SECOND)) {
     _demand = demand;

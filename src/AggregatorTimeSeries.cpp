@@ -91,6 +91,19 @@ std::vector< std::pair<TimeSeries::sharedPointer,double> > AggregatorTimeSeries:
   return _tsList;
 }
 
+void AggregatorTimeSeries::setMultiplierForSource(TimeSeries::sharedPointer timeSeries, double multiplier) {
+  // _tsList[x].first == TimeSeries, _tsList[x].second == multipier
+  // (private) std::vector< std::pair<TimeSeries::sharedPointer,double> > _tsList;
+  typedef std::pair<TimeSeries::sharedPointer, double> tsDoublePair_t;
+  BOOST_FOREACH(tsDoublePair_t& item, _tsList) {
+    TimeSeries::sharedPointer ts = item.first;
+    if (ts == timeSeries) {
+      item.second = multiplier;
+      // todo -- reset pointrecord backing store?
+    }
+  }
+}
+
 
 Point AggregatorTimeSeries::point(time_t time) {
   // call the base class method first, to see if the point is accessible via cache.
@@ -160,12 +173,19 @@ std::vector<Point> AggregatorTimeSeries::filteredPoints(TimeSeries::sharedPointe
     // resample the source if needed.
     // this also converts to local units, so we don't have to worry about that here.
     vector<Point> thisSourcePoints = Resampler::filteredPoints(ts, fromTime, toTime);
+    if (thisSourcePoints.size() == 0) {
+      cerr << "no points found for : " << ts->name() << "(" << fromTime << " - " << toTime << ")" << endl;
+      continue;
+    }
     vector<Point>::const_iterator pIt = thisSourcePoints.begin();
     // add in the new points.
     BOOST_FOREACH(Point& p, aggregated) {
       // just make sure we're at the right time.
-      while ((*pIt).time < p.time) {
+      while (pIt != thisSourcePoints.end() && (*pIt).time < p.time) {
         ++pIt;
+      }
+      if (pIt == thisSourcePoints.end()) {
+        break;
       }
       //
       if ((*pIt).time != p.time) {
@@ -174,6 +194,9 @@ std::vector<Point> AggregatorTimeSeries::filteredPoints(TimeSeries::sharedPointe
       
       // add it in.
       p += (*pIt) * multiplier;
+      if ((*pIt).quality != Point::good) {
+        p.quality = (*pIt).quality;
+      }
       
     }
   }

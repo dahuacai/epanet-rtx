@@ -28,16 +28,31 @@ Model::Model() : _flowUnits(1), _headUnits(1) {
   _relativeError->setName("Relative Error");
   _iterations->setName("Iterations");
   _doesOverrideDemands = false;
+  _shouldRunWaterQuality = false;
+  
+  _dmaShouldDetectClosedLinks = false;
+  _dmaPipesToIgnore = vector<Pipe::sharedPointer>();
   
   // defaults
   setFlowUnits(RTX_LITER_PER_SECOND);
   setHeadUnits(RTX_METER);
+  _name = "Model";
+  
+  _tanksNeedReset = false;
 }
 Model::~Model() {
   
 }
 std::ostream& RTX::operator<< (std::ostream &out, Model &model) {
   return model.toStream(out);
+}
+
+string Model::name() {
+  return _name;
+}
+
+void Model::setName(string name) {
+  _name = name;
 }
 
 void Model::loadModelFromFile(const std::string& filename) throw(std::exception) {
@@ -48,12 +63,83 @@ std::string Model::modelFile() {
   return _modelFile;
 }
 
-#pragma mark - Units
-Units Model::flowUnits()    { return _flowUnits; }
-Units Model::headUnits()    { return _headUnits; }
-void Model::setFlowUnits(Units units)   { _flowUnits = units; }
-void Model::setHeadUnits(Units units)   { _headUnits = units; }
+bool Model::shouldRunWaterQuality() {
+  return _shouldRunWaterQuality;
+}
 
+void Model::setShouldRunWaterQuality(bool run) {
+  _shouldRunWaterQuality = run;
+}
+
+
+#pragma mark - Units
+Units Model::flowUnits()    {
+  return _flowUnits;
+}
+Units Model::headUnits()    {
+  return _headUnits;
+}
+Units Model::qualityUnits() {
+  return _qualityUnits;
+}
+Units Model::volumeUnits() {
+  return _volumeUnits;
+}
+
+void Model::setFlowUnits(Units units)    {
+  if (!units.isSameDimensionAs(RTX_LITER_PER_SECOND)) {
+    cerr << "units not dimensionally consistent with flow" << endl;
+    return;
+  }
+  _flowUnits = units;
+  BOOST_FOREACH(Junction::sharedPointer j, this->junctions()) {
+    j->demand()->setUnits(units);
+  }
+  BOOST_FOREACH(Tank::sharedPointer t, this->tanks()) {
+    t->flowMeasure()->setUnits(units);
+  }
+  BOOST_FOREACH(Pipe::sharedPointer p, this->pipes()) {
+    p->flow()->setUnits(units);
+  }
+  BOOST_FOREACH(Pump::sharedPointer p, this->pumps()) {
+    p->flow()->setUnits(units);
+  }
+  BOOST_FOREACH(Valve::sharedPointer v, this->valves()) {
+    v->flow()->setUnits(units);
+  }
+}
+void Model::setHeadUnits(Units units)    {
+  _headUnits = units;
+  
+  BOOST_FOREACH(Junction::sharedPointer j, this->junctions()) {
+    j->head()->setUnits(units);
+  }
+  BOOST_FOREACH(Tank::sharedPointer t, this->tanks()) {
+    t->head()->setUnits(units);
+    t->level()->setUnits(units);
+  }
+  BOOST_FOREACH(Reservoir::sharedPointer r, this->reservoirs()) {
+    r->head()->setUnits(units);
+  }
+  
+}
+void Model::setQualityUnits(Units units) {
+  _qualityUnits = units;
+  BOOST_FOREACH(Junction::sharedPointer j, this->junctions()) {
+    j->quality()->setUnits(units);
+  }
+  BOOST_FOREACH(Tank::sharedPointer t, this->tanks()) {
+    t->quality()->setUnits(units);
+  }
+  BOOST_FOREACH(Reservoir::sharedPointer r, this->reservoirs()) {
+    r->quality()->setUnits(units);
+  }
+  
+}
+
+void Model::setVolumeUnits(RTX::Units units) {
+  _volumeUnits = units;
+}
 
 #pragma mark - Storage
 void Model::setStorage(PointRecord::sharedPointer record) {
@@ -65,8 +151,8 @@ void Model::setStorage(PointRecord::sharedPointer record) {
     element->setRecord(_record);
   }
   
-  BOOST_FOREACH(Zone::sharedPointer zone, zones()) {
-    zone->setRecord(_record);
+  BOOST_FOREACH(Dma::sharedPointer dma, dmas()) {
+    dma->setRecord(_record);
   }
   
   _relativeError->setRecord(_record);
@@ -108,11 +194,11 @@ void Model::setParameterSource(PointRecord::sharedPointer record) {
 }
 
 
-#pragma mark - Demand Zones
+#pragma mark - Demand dmas
 
-void Model::initDemandZones(bool detectClosedLinks) {
+void Model::initDMAs() {
   
-  _zones.clear();
+  _dmas.clear();
   
   // load up the node set
   std::set<Junction::sharedPointer> nodeSet;
@@ -125,36 +211,36 @@ void Model::initDemandZones(bool detectClosedLinks) {
   BOOST_FOREACH(Junction::sharedPointer reservoir, _reservoirs) {
     nodeSet.insert(reservoir);
   }
-  int iZone = 0;
+  int iDma = 0;
     
   // if the set is not empty, then there's work to be done:
   while (!nodeSet.empty()) {
-    iZone++;
+    iDma++;
     
-    // pick a random node, and build out that zone.
+    // pick a random node, and build out that dma.
     set<Junction::sharedPointer>::iterator nodeIt;
     nodeIt = nodeSet.begin();
     Junction::sharedPointer rootNode = *nodeIt;
     
-    string zoneName = boost::lexical_cast<string>(iZone);
-    Zone::sharedPointer newZone(new Zone(zoneName));
+    string dmaName = boost::lexical_cast<string>(iDma);
+    Dma::sharedPointer newDma(new Dma(dmaName));
     
     
     // specifiy the root node and populate the tree.
     try {
-      newZone->enumerateJunctionsWithRootNode(rootNode,detectClosedLinks);
+      newDma->enumerateJunctionsWithRootNode(rootNode,this->dmaShouldDetectClosedLinks(),this->dmaPipesToIgnore());
     } catch (exception &e) {
-      cerr << "Zone could not be enumerated: " << e.what() << endl;
+      cerr << "DMA could not be enumerated: " << e.what() << endl;
     } catch (...) {
-      cerr << "Zone could not be enumerated, and I don't know why" << endl;
+      cerr << "DMA could not be enumerated, and I don't know why" << endl;
     }
     
     
     // get the list of junctions that were just added.
-    vector<Junction::sharedPointer> addedJunctions = newZone->junctions();
+    vector<Junction::sharedPointer> addedJunctions = newDma->junctions();
     
     if (addedJunctions.size() < 1) {
-      cerr << "Could not add any junctions to zone " << iZone << endl;
+      cerr << "Could not add any junctions to dma " << iDma << endl;
       continue;
     }
     
@@ -167,8 +253,8 @@ void Model::initDemandZones(bool detectClosedLinks) {
       }
     }
     
-    cout << "adding zone: " << *newZone << endl;
-    this->addZone(newZone);
+    cout << "adding dma: " << *newDma << endl;
+    this->addDma(newDma);
   }
   
   
@@ -177,6 +263,22 @@ void Model::initDemandZones(bool detectClosedLinks) {
   
 }
 
+
+void Model::setDmaShouldDetectClosedLinks(bool detect) {
+  _dmaShouldDetectClosedLinks = detect;
+}
+
+bool Model::dmaShouldDetectClosedLinks() {
+  return _dmaShouldDetectClosedLinks;
+}
+
+void Model::setDmaPipesToIgnore(vector<Pipe::sharedPointer> ignorePipes) {
+  _dmaPipesToIgnore = ignorePipes;
+}
+
+vector<Pipe::sharedPointer> Model::dmaPipesToIgnore() {
+  return _dmaPipesToIgnore;
+}
 
 #pragma mark - Controls
 
@@ -235,11 +337,12 @@ void Model::addValve(Valve::sharedPointer newValve) {
   add(newValve);
 }
 
-void Model::addZone(Zone::sharedPointer zone) {
-  _zones.push_back(zone);
-  zone->setJunctionFlowUnits(this->flowUnits());
+void Model::addDma(Dma::sharedPointer dma) {
+  _dmas.push_back(dma);
+  dma->setJunctionFlowUnits(this->flowUnits());
   Clock::sharedPointer hydClock(new Clock(hydraulicTimeStep()));
-  zone->demand()->setClock(hydClock);
+  dma->demand()->setClock(hydClock);
+  
 }
 
 // add to master lists
@@ -279,8 +382,8 @@ std::vector<Element::sharedPointer> Model::elements() {
   return _elements;
 }
 
-std::vector<Zone::sharedPointer> Model::zones() {
-  return _zones;
+std::vector<Dma::sharedPointer> Model::dmas() {
+  return _dmas;
 }
 std::vector<Junction::sharedPointer> Model::junctions() {
   return _junctions;
@@ -325,13 +428,23 @@ void Model::runExtendedPeriod(time_t start, time_t end) {
   time_t nextClockTime = start;
   time_t nextSimulationTime = start;
   time_t stepToTime = start;
+  
   while (simulationTime < end) {
+    
+    // reset tanks?
+    if (_tanksNeedReset) {
+      _tanksNeedReset = false;
+      BOOST_FOREACH(Tank::sharedPointer t, this->tanks()) {
+        t->setResetLevelNextTime(true);
+      }
+    }
+    
     // get parameters from the RTX elements, and pull them into the simulation
     setSimulationParameters(simulationTime);
     // simulate this period, find the next timestep boundary.
     solveSimulation(simulationTime);
     // tell each element to update its derived states (simulation-computed values)
-    saveHydraulicStates(simulationTime);
+    saveNetworkStates(simulationTime);
     // get time to next simulation period
     nextSimulationTime = nextHydraulicStep(simulationTime);
     nextClockTime = _regularMasterClock->timeAfter(simulationTime);
@@ -362,6 +475,18 @@ int Model::qualityTimeStep() {
   return _qualityTimeStep;
 }
 
+void Model::setInitialQuality(double qual) {
+  
+}
+
+bool Model::tanksNeedReset() {
+  return _tanksNeedReset;
+}
+
+void Model::setTanksNeedReset(bool reset) {
+  _tanksNeedReset = reset;
+}
+
 
 #pragma mark - Protected Methods
 
@@ -370,7 +495,7 @@ std::ostream& Model::toStream(std::ostream &stream) {
   /*
    
    Model Properties:
-      ## nodes (## tanks, ## reservoirs) in ## zones
+      ## nodes (## tanks, ## reservoirs) in ## dmas
       ## links (## pumps, ## valves)
    Time Steps:
       ##s (hydraulic), ##s (quality)
@@ -380,7 +505,7 @@ std::ostream& Model::toStream(std::ostream &stream) {
    */
   
   stream << "Model Properties" << endl;
-  stream << "\t" << _nodes.size() << " nodes (" << _tanks.size() << " tanks, " << _reservoirs.size() << " reservoirs ) in " << _zones.size() << " zones" << endl;
+  stream << "\t" << _nodes.size() << " nodes (" << _tanks.size() << " tanks, " << _reservoirs.size() << " reservoirs ) in " << _dmas.size() << " dmas" << endl;
   stream << "\t" << _links.size() << " links (" << _pumps.size() << " pumps, " << _valves.size() << " valves)" << endl;
   stream << "Time Steps:" << endl;
   stream << "\t" << hydraulicTimeStep() << "s (hydraulic), " << qualityTimeStep() << "s (quality)" << endl;
@@ -388,11 +513,11 @@ std::ostream& Model::toStream(std::ostream &stream) {
     stream << "State Storage:" << endl << *_record;
   }
   
-  if (_zones.size() > 0) {
-    stream << "Demand Zones:" << endl;
-    BOOST_FOREACH(Zone::sharedPointer z, _zones) {
-      stream << "## Zone: " << z->name() << endl;
-      stream << *z << endl;
+  if (_dmas.size() > 0) {
+    stream << "Demand DMAs:" << endl;
+    BOOST_FOREACH(Dma::sharedPointer d, _dmas) {
+      stream << "## DMA: " << d->name() << endl;
+      stream << *d << endl;
     }
   }
   
@@ -403,10 +528,10 @@ std::ostream& Model::toStream(std::ostream &stream) {
 void Model::setSimulationParameters(time_t time) {
   // set all element parameters
   
-  // allocate junction demands based on zones, and set the junction demand values in the model.
+  // allocate junction demands based on dmas, and set the junction demand values in the model.
   if (_doesOverrideDemands) {
-    BOOST_FOREACH(Zone::sharedPointer zone, this->zones()) {
-      zone->allocateDemandToJunctions(time);
+    BOOST_FOREACH(Dma::sharedPointer dma, this->dmas()) {
+      dma->allocateDemandToJunctions(time);
     }
     // hydraulic junctions - set demand values.
     BOOST_FOREACH(Junction::sharedPointer junction, this->junctions()) {
@@ -421,6 +546,7 @@ void Model::setSimulationParameters(time_t time) {
       }
     }
   }
+  
   // for reservoirs, set the boundary head condition
   BOOST_FOREACH(Reservoir::sharedPointer reservoir, this->reservoirs()) {
     if (reservoir->doesHaveBoundaryHead()) {
@@ -429,37 +555,80 @@ void Model::setSimulationParameters(time_t time) {
       setReservoirHead( reservoir->name(), headValue );
     }
   }
+  
   // for tanks, set the boundary head, but only if the tank reset clock has fired.
   BOOST_FOREACH(Tank::sharedPointer tank, this->tanks()) {
-    if (tank->doesResetLevel() && tank->levelResetClock()->isValid(time) && tank->doesHaveHeadMeasure()) {
-      double levelValue = Units::convertValue(tank->level()->pointAtOrBefore(time).value, tank->level()->units(), headUnits());
+    if (tank->doesResetLevelUsingClock() && tank->levelResetClock()->isValid(time) && tank->doesHaveHeadMeasure()) {
+      double levelValue = Units::convertValue(tank->levelMeasure()->pointAtOrBefore(time).value, tank->levelMeasure()->units(), headUnits());
+      // adjust for model limits (epanet rejects otherwise, for example)
+      levelValue = (levelValue <= tank->maxLevel()) ? levelValue : tank->maxLevel();
+      levelValue = (levelValue >= tank->minLevel()) ? levelValue : tank->minLevel();
       setTankLevel(tank->name(), levelValue);
     }
   }
-  
+
+  // or, set the boundary head if someone has specifically requested it
+  BOOST_FOREACH(Tank::sharedPointer tank, this->tanks()) {
+    if (tank->resetLevelNextTime() && tank->doesHaveHeadMeasure()) {
+      double levelValue = Units::convertValue(tank->levelMeasure()->pointAtOrBefore(time).value, tank->levelMeasure()->units(), headUnits());
+      // adjust for model limits (epanet rejects otherwise, for example)
+      levelValue = (levelValue <= tank->maxLevel()) ? levelValue : tank->maxLevel();
+      levelValue = (levelValue >= tank->minLevel()) ? levelValue : tank->minLevel();
+      setTankLevel(tank->name(), levelValue);
+      tank->setResetLevelNextTime(false);      
+    }
+  }
+
   // for valves, set status and setting
   BOOST_FOREACH(Valve::sharedPointer valve, this->valves()) {
+    // status can affect settings and vice-versa; status rules
+    Pipe::status_t status = Pipe::OPEN;
     if (valve->doesHaveStatusParameter()) {
-      setPipeStatus( valve->name(), Pipe::status_t((int)(valve->statusParameter()->pointAtOrBefore(time).value)) );
+      status = Pipe::status_t((int)(valve->statusParameter()->pointAtOrBefore(time).value));
+      setPipeStatus( valve->name(), status );
     }
-    if (valve->doesHaveSettingParameter()) {
+    if (valve->doesHaveSettingParameter() && status) {
       setValveSetting( valve->name(), valve->settingParameter()->pointAtOrBefore(time).value );
     }
   }
   
-  // for pumps, set status
+  // for pumps, set status and setting
   BOOST_FOREACH(Pump::sharedPointer pump, this->pumps()) {
+    // status can affect settings and vice-versa; status rules
+    Pipe::status_t status = Pipe::OPEN;
     if (pump->doesHaveStatusParameter()) {
-      setPumpStatus( pump->name(), Pipe::status_t((int)(pump->statusParameter()->pointAtOrBefore(time).value)) );
+      status = Pipe::status_t((int)(pump->statusParameter()->pointAtOrBefore(time).value));
+      setPumpStatus( pump->name(), status );
+    }
+    if (pump->doesHaveSettingParameter() && status) {
+      setPumpSetting( pump->name(), pump->settingParameter()->pointAtOrBefore(time).value );
     }
   }
+  
+  // for pipes, set status
+  BOOST_FOREACH(Pipe::sharedPointer pipe, this->pipes()) {
+    if (pipe->doesHaveStatusParameter()) {
+      setPipeStatus( pipe->name(), Pipe::status_t((int)(pipe->statusParameter()->pointAtOrBefore(time).value)) );
+    }
+  }
+  
+  //////////////////////////////
+  // water quality parameters //
+  //////////////////////////////
+  BOOST_FOREACH(Junction::sharedPointer j, this->junctions()) {
+    if (j->doesHaveQualitySource()) {
+      double quality = Units::convertValue(j->qualitySource()->pointAtOrBefore(time).value, j->qualitySource()->units(), qualityUnits());
+      setJunctionQuality(j->name(), quality);
+    }
+  }
+  
   
   
 }
 
 
 
-void Model::saveHydraulicStates(time_t time) {
+void Model::saveNetworkStates(time_t time) {
   
   // retrieve results from the hydraulic sim 
   // then insert the state values into elements' time series.
@@ -473,7 +642,7 @@ void Model::saveHydraulicStates(time_t time) {
     
     // todo - more fine-grained quality data? at wq step resolution...
     double quality;
-    quality = 0; // Units::convertValue(junctionQuality(junction->name()), RTX_MILLIGRAMS_PER_LITER, junction->quality()->units());
+    quality = Units::convertValue(junctionQuality(junction->name()), this->qualityUnits(), junction->quality()->units());
     Point qualityPoint(time, quality, Point::good);
     junction->quality()->insert(qualityPoint);
   }
@@ -500,6 +669,13 @@ void Model::saveHydraulicStates(time_t time) {
     head = Units::convertValue(junctionHead(tank->name()), headUnits(), tank->head()->units());
     Point headPoint(time, head, Point::good);
     tank->head()->insert(headPoint);
+    tank->level()->point(headPoint.time);
+    
+    double quality;
+    quality = Units::convertValue(junctionQuality(tank->name()), this->qualityUnits(), tank->quality()->units());
+    Point qualityPoint(time, quality, Point::good);
+    tank->quality()->insert(qualityPoint);
+    
   }
   
   // pipe elements

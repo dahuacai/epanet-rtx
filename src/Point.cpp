@@ -29,6 +29,7 @@ Point::Point(time_t t, double v, Qual_t q, double c) : time(t),value(v),quality(
 }
 
 Point::~Point() {
+  
 }
 
 
@@ -104,19 +105,20 @@ Point Point::linearInterpolate(const Point& p1, const Point& p2, const time_t& t
     double dv2 = dv * dt2 / dt;
     double newValue = p1.value + dv2;
     double newConfidence = (p1.confidence + p2.confidence) / 2; // TODO -- more elegant confidence estimation
-    p = Point(t, newValue, Point::interpolated, newConfidence);
+    p = Point(t, newValue, Point::good, newConfidence);
   }
   return p;
 }
 
 
-
+/*
 std::ostream& RTX::operator<< (std::ostream &out, Point &point) {
   return point.toStream(out);
 }
+*/
 
 std::ostream& Point::toStream(std::ostream &stream) {
-  stream << "(" << time << "," << value << "," << quality << ")";
+  stream << "(" << time << "," << value << "," << quality << "," << confidence << ")";
   return stream;
 }
 
@@ -127,7 +129,7 @@ std::ostream& Point::toStream(std::ostream &stream) {
 Point Point::convertPoint(const Point& point, const Units& fromUnits, const Units& toUnits) {
   double value = Units::convertValue(point.value, fromUnits, toUnits);
   double confidence = Units::convertValue(point.confidence, fromUnits, toUnits);
-  return Point(point.time, value, Point::good, confidence);
+  return Point(point.time, value, point.quality, confidence);
 }
 
 

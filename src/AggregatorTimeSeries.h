@@ -13,6 +13,7 @@
 #include <vector>
 #include "Resampler.h"
 #include "rtxExceptions.h"
+#include <boost/foreach.hpp>
 
 namespace RTX {
   
@@ -38,6 +39,7 @@ namespace RTX {
     void addSource(TimeSeries::sharedPointer timeSeries, double multiplier = 1.) throw(RtxException);
     void removeSource(TimeSeries::sharedPointer timeSeries);
     std::vector< std::pair<TimeSeries::sharedPointer,double> > sources();
+    void setMultiplierForSource(TimeSeries::sharedPointer timeSeries, double multiplier);
     
     // reimplement the base class methods
     virtual Point point(time_t time);

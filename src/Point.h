@@ -23,7 +23,7 @@ namespace RTX {
   class Point {    
   public:
     //! quality flag
-    enum Qual_t { good, missing, estimated, forecasted, interpolated, constant, averaged };
+    enum Qual_t { good, questionable, missing, estimated, forecasted, bad };
     
     //! Empty Constructor, equivalent to Point(0,0,Point::missing,0)
     Point();
@@ -31,6 +31,8 @@ namespace RTX {
     Point(time_t time, double value, Qual_t qual = good, double confidence = 0.);
     // dtor
     ~Point();
+    
+    // operators
     Point operator+(const Point& point) const;
     Point& operator+=(const Point& point);
     Point operator*(const double factor) const;
@@ -50,9 +52,15 @@ namespace RTX {
     static bool comparePointTime(const Point& left, const Point& right);
     static Point linearInterpolate(const Point& p1, const Point& p2, const time_t& t);
     
+    friend std::ostream& operator<<(std::ostream& outputStream, const Point& p)
+    {
+      return outputStream << p.value;
+    }
+    
+    
   };
 
-  std::ostream& operator<< (std::ostream &out, Point &point);
+  //std::ostream& operator<< (std::ostream &out, Point &point);
 
 }
 

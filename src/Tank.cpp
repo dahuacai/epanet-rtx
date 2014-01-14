@@ -15,14 +15,19 @@
 #include "FirstDerivative.h"
 
 using namespace RTX;
+using namespace std;
 
 Tank::Tank(const std::string& name) : Junction(name) {
   setType(TANK);
   // initialize time series states
   _doesResetLevel = false;
+  _resetLevelNextTime = false;
   _level.reset( new OffsetTimeSeries() );
   _level->setSource(this->head());
   _level->setName(name + " level (offset)");
+  
+  _minLevel = 0;
+  _maxLevel = 0;
   
   // likely to be used.
   _levelMeasure.reset( new OffsetTimeSeries() );
@@ -45,6 +50,41 @@ Tank::~Tank() {
 }
 
 
+void Tank::setMinMaxLevel(double minLevel, double maxLevel) {
+  _minLevel = minLevel;
+  _maxLevel = maxLevel;
+}
+
+double Tank::minLevel() {
+  return _minLevel;
+}
+
+double Tank::maxLevel() {
+  return _maxLevel;
+}
+
+
+void Tank::setGeometry(std::vector<std::pair<double, double> > levelVolumePoints, RTX::Units levelUnits, RTX::Units volumeUnits) {
+  
+  _geometry = levelVolumePoints;
+  _geometryLevelUnits = levelUnits;
+  _geometryVolumeUnits = volumeUnits;
+  
+  _volumeMeasure->setCurve(_geometry);
+  _volumeMeasure->setInputUnits(levelUnits);
+  _volumeMeasure->setUnits(volumeUnits);
+  
+}
+
+vector< pair<double,double> > Tank::geometry() {
+  return _geometry;
+}
+pair<Units,Units> Tank::geometryUnits() {
+  return make_pair(_geometryLevelUnits, _geometryVolumeUnits);
+}
+
+
+
 void Tank::setElevation(double elevation) {
   Node::setElevation(elevation);
   // re-set the elevation offset for the level timeseries
@@ -53,14 +93,17 @@ void Tank::setElevation(double elevation) {
 }
 
 void Tank::setLevelMeasure(TimeSeries::sharedPointer levelMeasure) {
-  //std::cout << "oops, depricated" << std::endl;
+  if (!levelMeasure) {
+    this->setHeadMeasure(TimeSeries::sharedPointer());
+  }
+  else {
+    OffsetTimeSeries::sharedPointer offsetHeadMeasure( new OffsetTimeSeries() );
+    offsetHeadMeasure->setName(this->name() + " offset");
+    offsetHeadMeasure->setSource(levelMeasure);
+    offsetHeadMeasure->setOffset( (this->elevation()) );
   
-  OffsetTimeSeries::sharedPointer offsetHeadMeasure( new OffsetTimeSeries() );
-  offsetHeadMeasure->setName(this->name() + " offset");
-  offsetHeadMeasure->setSource(levelMeasure);
-  offsetHeadMeasure->setOffset( (this->elevation()) );
-  
-  this->setHeadMeasure(offsetHeadMeasure);
+    this->setHeadMeasure(offsetHeadMeasure);
+  }
 }
 
 TimeSeries::sharedPointer Tank::levelMeasure() {
@@ -74,11 +117,15 @@ void Tank::setHeadMeasure(TimeSeries::sharedPointer head) {
   // now hook it up to the "measured" level->volume->flow chain.
   // assumption about elevation units is made here.
   // todo -- revise elevation units handling
-  _levelMeasure->setUnits(head->units());
-  _levelMeasure->setSource(head);
-  _levelMeasure->setClock(head->clock());
-  _volumeMeasure->setClock(head->clock());
-  _flowMeasure->setClock(head->clock());
+  if (head) {
+    _levelMeasure->setUnits(head->units());
+    _levelMeasure->setSource(head);
+    
+    _levelMeasure->setClock(head->clock());
+    _volumeMeasure->setClock(head->clock());
+    _flowMeasure->setClock(head->clock());
+  }
+  
 
 }
 
@@ -94,7 +141,13 @@ TimeSeries::sharedPointer Tank::volumeMeasure() {
 }
 
 
-bool Tank::doesResetLevel() {
+void Tank::setResetLevelNextTime(bool reset) {
+  _resetLevelNextTime = reset;
+}
+bool Tank::resetLevelNextTime() {
+  return _resetLevelNextTime;
+}
+bool Tank::doesResetLevelUsingClock() {
   return _doesResetLevel;
 }
 void Tank::setLevelResetClock(Clock::sharedPointer clock) {

@@ -33,16 +33,38 @@ namespace RTX {
    
    */
   
+  using std::string;
+  
   class MysqlPointRecord : public DbPointRecord {
   public:
+    
+    class mysql_connection_t {
+    public:
+      string host,uid,pwd,db;
+    };
+    
     RTX_SHARED_POINTER(MysqlPointRecord);
     MysqlPointRecord();
     virtual ~MysqlPointRecord();
     
-    virtual void connect() throw(RtxException);
+    string host();
+    void setHost(string host);
+    
+    string uid();
+    void setUid(string uid);
+    
+    string pwd();
+    void setPwd(string pwd);
+    
+    string db();
+    void setDb(string db);
+    
+    virtual void dbConnect() throw(RtxException);
     virtual bool isConnected();
-    virtual std::string registerAndGetIdentifier(std::string recordName);
+    virtual std::string registerAndGetIdentifier(std::string recordName, Units dataUnits);
     virtual std::vector<std::string> identifiers();
+    virtual std::vector<std::pair<std::string, Units> >availableData();
+    
     virtual time_pair_t range(const string& id);
     virtual std::ostream& toStream(std::ostream &stream);
     
@@ -59,14 +81,18 @@ namespace RTX {
     virtual void truncate();
     
   private:
+    bool _connected;
+    mysql_connection_t _connectionInfo;
     void insertSingleNoCommit(const std::string& id, Point point);
     bool checkConnection();
     void insertSingle(const string& id, time_t time, double value);
     Point selectSingle(const string& id, time_t time, boost::shared_ptr<sql::PreparedStatement> statement);
+    std::vector<Point> pointsFromResultSet(boost::shared_ptr<sql::ResultSet> result);
+    
     void handleException(sql::SQLException &e);
     string _name;
     sql::Driver* _driver;
-    boost::shared_ptr<sql::Connection> _connection;
+    boost::shared_ptr<sql::Connection> _mysqlCon;
     // prepared statements for selecting, inserting
     boost::shared_ptr<sql::PreparedStatement>  _rangeSelect,
                                                _singleSelect,

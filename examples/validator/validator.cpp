@@ -10,7 +10,7 @@
 #include <time.h>
 #include <boost/foreach.hpp>
 
-#include "ConfigFactory.h"
+#include "ConfigProject.h"
 
 using namespace std;
 using namespace RTX;
@@ -30,8 +30,12 @@ int main (int argc, const char * argv[])
   time_t someTime = 1222873200; // unix-time 2008-10-01 15:00:00 GMT
   long duration = 60 * 60 * 24; // 1 day
   
+  forwardSimulationConfig = "/Users/sam/Copy/Code/epanet-rtx/examples/validator/sampletown_synthetic.cfg";
+  
   // test the forward synthetic simulation
-  runSimulationUsingConfig(forwardSimulationConfig, someTime-3600, duration+7200);
+  //runSimulationUsingConfig(forwardSimulationConfig, someTime-3600, duration+7200);
+  
+  realtimeConfig = "/Users/sam/Copy/Code/epanet-rtx/examples/validator/sampletown_realtime.cfg";
   
   // test the real-time methods
   runSimulationUsingConfig(realtimeConfig, someTime, duration);
@@ -45,7 +49,7 @@ int main (int argc, const char * argv[])
 
 void runSimulationUsingConfig(const string& filePath, time_t someTime, long duration) {
   
-  ConfigFactory config;
+  ConfigProject config;
   Model::sharedPointer model;
   
   try {

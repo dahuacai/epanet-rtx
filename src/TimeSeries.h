@@ -58,6 +58,7 @@ namespace RTX {
     class Summary {
     public:
       std::vector<Point> points;
+      std::vector<Point> gaps;
       double mean;
       double variance;
       size_t count;
@@ -93,10 +94,17 @@ namespace RTX {
     virtual void setName(const std::string& name);
     void setRecord(PointRecord::sharedPointer record);
     void resetCache();
-    void setClock(Clock::sharedPointer clock);
+    virtual void setClock(Clock::sharedPointer clock);
     Clock::sharedPointer clock();
+    
     virtual void setUnits(Units newUnits);
     Units units();
+    
+    
+    void setFirstTime(time_t time);
+    void setLastTime(time_t time);
+    time_t firstTime();
+    time_t lastTime();
     
     // tests
     //virtual bool isPointAvailable(time_t time);
@@ -115,6 +123,7 @@ namespace RTX {
     //TimeSeries::sharedPointer _source;
     // TODO -- units
     Units _units;
+    std::pair<time_t, time_t> _validTimeRange;
   
   };
 

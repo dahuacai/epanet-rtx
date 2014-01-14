@@ -12,7 +12,7 @@
 
 using namespace RTX;
 
-Clock::Clock(int period, time_t start) {
+Clock::Clock(int period, time_t start) : _name("") {
   if (period > 0) {
     _period = period;
     _isRegular = true;
@@ -33,6 +33,15 @@ std::ostream& RTX::operator<< (std::ostream &out, Clock &clock) {
 }
 
 #pragma mark - Public Methods
+
+
+std::string Clock::name() {
+  return _name;
+}
+
+void Clock::setName(std::string name) {
+  _name = name;
+}
 
 bool Clock::isCompatibleWith(Clock::sharedPointer clock) {
   // if this clock is irregular, it's compatible with anything!
@@ -85,8 +94,19 @@ int Clock::period() {
   return _period;
 }
 
+void Clock::setPeriod(int p) {
+  _period = p;
+  if (p > 0) {
+    _isRegular = true;
+  }
+}
+
 time_t Clock::start() {
   return _start;
+}
+
+void Clock::setStart(time_t startTime) {
+  _start = startTime;
 }
 
 time_t Clock::validTime(time_t time) {
@@ -130,7 +150,7 @@ std::vector< time_t > Clock::timeValuesInRange(time_t start, time_t end) {
   if (!isValid(start)) {
     start = timeAfter(start);
   }
-  for (time_t thisTime = start; thisTime < end; thisTime = timeAfter(thisTime)) {
+  for (time_t thisTime = start; thisTime <= end; thisTime = timeAfter(thisTime)) {
     if (thisTime == 0) {
       break;
     }

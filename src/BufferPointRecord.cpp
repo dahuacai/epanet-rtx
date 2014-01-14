@@ -14,6 +14,10 @@
 using namespace RTX;
 using namespace std;
 
+using boost::signals2::mutex;
+using boost::interprocess::scoped_lock;
+
+
 BufferPointRecord::BufferPointRecord() {
   _defaultCapacity = RTX_BUFFER_DEFAULT_CACHESIZE;
 }
@@ -30,7 +34,7 @@ std::ostream& BufferPointRecord::toStream(std::ostream &stream) {
 }
 
 
-std::string BufferPointRecord::registerAndGetIdentifier(std::string recordName) {
+std::string BufferPointRecord::registerAndGetIdentifier(std::string recordName, Units dataUnits) {
   // register the recordName internally and generate a buffer and mutex
   
   // check to see if it's there first
@@ -59,9 +63,10 @@ std::vector<std::string> BufferPointRecord::identifiers() {
 Point BufferPointRecord::point(const string& identifier, time_t time) {
   
   bool isAvailable = false;
+  bool idsMatch = RTX_STRINGS_ARE_EQUAL_CS(_cachedPointId, identifier);
   
   // quick check for repeated calls
-  if (_cachedPoint.time == time && RTX_STRINGS_ARE_EQUAL_CS(_cachedPointId, identifier) ) {
+  if (_cachedPoint.time == time && idsMatch ) {
     return _cachedPoint;
   }
   
@@ -72,7 +77,7 @@ Point BufferPointRecord::point(const string& identifier, time_t time) {
   }
   
   // get the constituents
-  boost::signals2::mutex *mutex = (it->second.second.get());
+  boost::signals2::mutex *mtx = (it->second.second.get());
   PointBuffer_t& buffer = (it->second.first);
   
   if (buffer.empty()) {
@@ -80,20 +85,29 @@ Point BufferPointRecord::point(const string& identifier, time_t time) {
   }
   
   // lock the buffer
-  mutex->lock();
+  scoped_lock<mutex> lock(*mtx);
+  //mtx->lock();
   
   Point pFirst = buffer.front();
   Point pLast = buffer.back();
   
   if (pFirst.time <= time && time <= pLast.time) {
     // search the buffer
-    //TimePointPair_t finder(time, PointPair_t(0,0));
     Point finder(time, 0);
-    PointBuffer_t::const_iterator pbIt = std::lower_bound(buffer.begin(), buffer.end(), finder, &Point::comparePointTime);
+    /*
+    if (!idsMatch || _cacheIterator.m_buff == NULL) {
+      _cacheIterator = buffer.begin();
+    }
+     */
+    PointBuffer_t::iterator startIterator = /*(_cacheIterator->time < pFirst.time) ? _cacheIterator :*/ buffer.begin();
+    
+    
+    PointBuffer_t::iterator pbIt = std::lower_bound(startIterator, buffer.end(), finder, &Point::comparePointTime);
     if (pbIt != buffer.end() && pbIt->time == time) {
       isAvailable = true;
       _cachedPoint = *pbIt;
       _cachedPointId = identifier;
+      _cacheIterator = pbIt;
     }
     else {
       //cerr << "whoops, not found" << endl;
@@ -113,7 +127,7 @@ Point BufferPointRecord::point(const string& identifier, time_t time) {
   
   
   // ok, all done
-  mutex->unlock();
+  //mutex->unlock();
   
   if (isAvailable) {
     return _cachedPoint;
@@ -135,14 +149,24 @@ Point BufferPointRecord::pointBefore(const string& identifier, time_t time) {
   KeyedBufferMutexMap_t::iterator it = _keyedBufferMutex.find(identifier);
   if (it != _keyedBufferMutex.end()) {
     // get the constituents
-    boost::signals2::mutex *mutex = (it->second.second.get());
+    boost::signals2::mutex *mtx = (it->second.second.get());
     PointBuffer_t& buffer = (it->second.first);
     // lock the buffer
-    mutex->lock();
+    scoped_lock<mutex> lock(*mtx);
+//    mtx->lock();
     
     PointBuffer_t::const_iterator it  = lower_bound(buffer.begin(), buffer.end(), finder, &Point::comparePointTime);
-    if (it != buffer.end() && it != buffer.begin()) {
-      if (--it != buffer.end()) {
+    if (it != buffer.begin()) {
+      // OK we're not at the beginning, so there is a point before time
+      if (it != buffer.end()) {
+        // and we're not at the end, so the point is within the continuous buffer
+        // we want the previous point
+        foundPoint = *(--it);
+        _cachedPoint = foundPoint;
+        _cachedPointId = identifier;
+      }
+      else if ((--it)->time == time - 1) {
+        // edge case where end of buffer is adjacent to requested time
         foundPoint = *it;
         _cachedPoint = foundPoint;
         _cachedPointId = identifier;
@@ -150,7 +174,7 @@ Point BufferPointRecord::pointBefore(const string& identifier, time_t time) {
     }
     
     // all done.
-    mutex->unlock();
+    //mtx->unlock();
   }
   
   return foundPoint;
@@ -166,20 +190,27 @@ Point BufferPointRecord::pointAfter(const string& identifier, time_t time) {
   KeyedBufferMutexMap_t::iterator it = _keyedBufferMutex.find(identifier);
   if (it != _keyedBufferMutex.end()) {
     // get the constituents
-    boost::signals2::mutex *mutex = (it->second.second.get());
+    boost::signals2::mutex *mtx = (it->second.second.get());
     PointBuffer_t& buffer = (it->second.first);
     // lock the buffer
-    mutex->lock();
+//    mtx->lock();
+    scoped_lock<mutex> lock(*mtx);
     
     PointBuffer_t::const_iterator it = upper_bound(buffer.begin(), buffer.end(), finder, &Point::comparePointTime);
     if (it != buffer.end()) {
-      foundPoint = *it;
-      _cachedPoint = foundPoint;
-      _cachedPointId = identifier;
+      // OK we're not at the end, so there is a point after time
+      if (it != buffer.begin() || (it->time == time + 1)) {
+        // either we're not at the beginning, so the point is within the continuous buffer -
+        // or edge case where beginning of buffer is adjacent to requested time
+        foundPoint = *it;
+        _cachedPoint = foundPoint;
+        _cachedPointId = identifier;
+      }
     }
     
+    
     // all done.
-    mutex->unlock();
+//    mtx->unlock();
   }
   
   return foundPoint;
@@ -196,10 +227,11 @@ std::vector<Point> BufferPointRecord::pointsInRange(const string& identifier, ti
   KeyedBufferMutexMap_t::iterator it = _keyedBufferMutex.find(identifier);
   if (it != _keyedBufferMutex.end()) {
     // get the constituents
-    boost::signals2::mutex *mutex = (it->second.second.get());
+    boost::signals2::mutex *mtx = (it->second.second.get());
     PointBuffer_t& buffer = (it->second.first);
     // lock the buffer
-    mutex->lock();
+//    mtx->lock();
+    scoped_lock<mutex> lock(*mtx);
     
     PointBuffer_t::const_iterator it = lower_bound(buffer.begin(), buffer.end(), finder, &Point::comparePointTime);
     while ( (it != buffer.end()) && (it->time <= endTime) ) {
@@ -209,7 +241,7 @@ std::vector<Point> BufferPointRecord::pointsInRange(const string& identifier, ti
     }
     
     // all done.
-    mutex->unlock();
+//    mtx->unlock();
   }
   
   return pointVector;
@@ -256,7 +288,7 @@ void BufferPointRecord::addPoints(const string& identifier, std::vector<Point> p
     // scoped lock so we don't have to worry about cleanup.
     // locking the buffer because we're changing it.
     {
-      boost::interprocess::scoped_lock<boost::signals2::mutex> lock(*mutex);
+      scoped_lock<boost::signals2::mutex> lock(*mutex);
       // more gap detection? righ on!
       bool gap = true;
       

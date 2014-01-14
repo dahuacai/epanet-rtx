@@ -23,14 +23,16 @@ void FirstDerivative::setSource(TimeSeries::sharedPointer source) {
   Units originalUnits = this->units();
   this->setUnits(RTX_DIMENSIONLESS);  // non-dimensionalize so that we can accept this source.
   Resampler::setSource(source);
-  
-  // get the rate of change units
-  Units rate = source->units() / RTX_SECOND;
-  
-  if (rate.isSameDimensionAs(originalUnits)) {
-    rate = originalUnits;
+  if (source) {
+    // get the rate of change units
+    Units rate = source->units() / RTX_SECOND;
+    
+    if (rate.isSameDimensionAs(originalUnits)) {
+      rate = originalUnits;
+    }
+    this->setUnits(rate);  // re-set the units.
   }
-  this->setUnits(rate);  // re-set the units.
+  
 }
 
 void FirstDerivative::setUnits(Units newUnits) {
@@ -57,13 +59,14 @@ Point FirstDerivative::filteredSingle(pVec_cIt& vecStart, pVec_cIt& vecEnd, pVec
   
   pVec_cIt fwd_it = vecPos;
   pVec_cIt back_it = vecPos;
-  alignVectorIterators(vecStart, vecEnd, vecPos, t, back_it, fwd_it);
+  bool ok = alignVectorIterators(vecStart, vecEnd, vecPos, t, back_it, fwd_it);
   
   
   // with any luck, at this point we have the back and fwd iterators positioned just right.
   // one on either side of the time point we need.
   // however, we may have been unable to accomplish this task.
-  if (t < back_it->time || fwd_it->time < t) {
+  //if (t < back_it->time || fwd_it->time < t) {
+  if (!ok) {
     return Point(); // invalid
   }
   
@@ -87,6 +90,9 @@ Point FirstDerivative::filteredSingle(pVec_cIt& vecStart, pVec_cIt& vecEnd, pVec
 
 std::ostream& FirstDerivative::toStream(std::ostream &stream) {
   TimeSeries::toStream(stream);
-  stream << "First Derivative Of: " << *source() << "\n";
+  if (source()) {
+    stream << "First Derivative Of: " << *source() << "\n";
+  }
+  
   return stream;
 }

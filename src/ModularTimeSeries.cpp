@@ -34,8 +34,15 @@ ostream& ModularTimeSeries::toStream(ostream &stream) {
 }
 
 void ModularTimeSeries::setSource(TimeSeries::sharedPointer sourceTimeSeries) {
+  if (!sourceTimeSeries) {
+    _source = TimeSeries::sharedPointer();
+    _doesHaveSource = false;
+    return;
+  }
+  
   if( isCompatibleWith(sourceTimeSeries) ) {
     _source = sourceTimeSeries;
+    
     _doesHaveSource = true;
     //resetCache();
     // if this is an irregular time series, then set this clock to the same as that guy's clock.
@@ -199,7 +206,7 @@ vector< Point > ModularTimeSeries::points(time_t start, time_t end) {
         vector<Point> gapPoints = filteredPoints(source(), gapStart, gapEnd);
         if (gapPoints.size() > 0) {
           this->insertPoints(gapPoints);
-          now = gapPoints.back().time;
+          now = clock()->timeAfter(gapPoints.back().time);
           BOOST_FOREACH(Point p, gapPoints) {
             stitchedPoints.push_back(p);
           }

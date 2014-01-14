@@ -6,6 +6,7 @@
 //  See README.md and license.txt for more information
 //  
 
+#include <limits.h>
 #include <boost/foreach.hpp>
 
 #include "TimeSeries.h"
@@ -27,6 +28,7 @@ TimeSeries::TimeSeries() : _units(1) {
   setName("Time Series");
   _clock.reset( new IrregularClock(_points, "Time Series") );
   _units = RTX_DIMENSIONLESS;
+  _validTimeRange = std::make_pair(1, LONG_MAX);
 }
 
 TimeSeries::~TimeSeries() {
@@ -43,7 +45,7 @@ std::ostream& RTX::operator<< (std::ostream &out, TimeSeries &ts) {
 
 void TimeSeries::setName(const std::string& name) {
   _name = name;
-  _points->registerAndGetIdentifier(name);
+  _points->registerAndGetIdentifier(name, this->units());
   if (_clock && !_clock->isRegular()) {
     // reset the clock to point to the new record ID, but only if we start with an irregular clock.
     _clock.reset( new IrregularClock(_points, name) );
@@ -113,25 +115,6 @@ std::vector< Point > TimeSeries::points(time_t start, time_t end) {
       points.push_back(aNewPoint);
     }
   }
-  
-  /*
-  Point aPoint;
-
-  time_t queryTime;
-
- 
-  
-  
-  queryTime = start;
-  while (queryTime <= end) {
-    aPoint = pointAfter(queryTime);
-    if (!aPoint) {
-      break;
-    }
-    points.push_back(aPoint);
-    queryTime = aPoint->time;
-  }
-   */
     
   return points;
 }
@@ -155,14 +138,6 @@ Point TimeSeries::pointBefore(time_t time) {
   if (timeBefore > 0) {
     myPoint = point(timeBefore);
   }
-  
-  
-  /* / if not, we depend on the PointRecord to tell us what the previous point is.
-  else {
-    myPoint = _points->pointBefore(time);
-    myPoint = point(myPoint->time);
-  }
-   */
   
   return myPoint;
 }
@@ -200,6 +175,17 @@ TimeSeries::Summary TimeSeries::summary(time_t start, time_t end) {
   Summary s;
   s.points = this->points(start, end);
   
+  // gaps
+  s.gaps.reserve(s.points.size());
+  time_t prior = this->pointBefore(s.points.front().time).time;
+  BOOST_FOREACH(const Point& p, s.points) {
+    time_t gapLength = p.time - prior;
+    Point newPoint(p.time, (double)gapLength);
+    s.gaps.push_back(newPoint);
+    prior = p.time;
+  }
+  
+  // stats
   accumulator_set<double, features<tag::max, tag::min, tag::count, tag::mean, tag::variance(lazy)> > acc;
   BOOST_FOREACH(const Point& p, s.points) {
     acc(p.value);
@@ -226,14 +212,16 @@ time_t TimeSeries::period() {
 
 void TimeSeries::setRecord(PointRecord::sharedPointer record) {
   if(_points) {
-    _points->reset(name());
+    //_points->reset(name());
   }
   if (!record) {
-    cerr << "WARNING: could not set record for Time Series \"" << this->name() << "\"" << endl;
-    return;
+    PointRecord::sharedPointer pr( new PointRecord() );
+    record = pr;
+    //cerr << "WARNING: removing record for Time Series \"" << this->name() << "\"" << endl;
   }
+  
   _points = record;
-  record->registerAndGetIdentifier(name());
+  record->registerAndGetIdentifier(this->name(), this->units());
   
   // if my clock is irregular, then re-set it with the current pointRecord as the master synchronizer.
   if (!_clock || !_clock->isRegular()) {
@@ -247,7 +235,7 @@ PointRecord::sharedPointer TimeSeries::record() {
 
 void TimeSeries::resetCache() {
   _points->reset(name());
-  _points->registerAndGetIdentifier(name());
+  _points->registerAndGetIdentifier(this->name(), this->units());
 }
 
 void TimeSeries::setClock(Clock::sharedPointer clock) {
@@ -269,6 +257,22 @@ Units TimeSeries::units() {
   return _units;
 }
 
+void TimeSeries::setFirstTime(time_t time) {
+  _validTimeRange.first = time;
+}
+
+void TimeSeries::setLastTime(time_t time) {
+  _validTimeRange.second = time;
+}
+
+time_t TimeSeries::firstTime() {
+  return _validTimeRange.first;
+}
+
+time_t TimeSeries::lastTime() {
+  return _validTimeRange.second;
+}
+
 #pragma mark - Protected Methods
 
 std::ostream& TimeSeries::toStream(std::ostream &stream) {
@@ -286,8 +290,9 @@ bool TimeSeries::isCompatibleWith(TimeSeries::sharedPointer otherSeries) {
   
   // basic check for compatible regular time series.
   Clock::sharedPointer theirClock = otherSeries->clock(), myClock = this->clock();
-  
-  return (myClock->isCompatibleWith(theirClock) && (units().isDimensionless() || units().isSameDimensionAs(otherSeries->units())));
+  bool clocksCompatible = myClock->isCompatibleWith(theirClock);
+  bool unitsCompatible = units().isDimensionless() || units().isSameDimensionAs(otherSeries->units());
+  return (clocksCompatible && unitsCompatible);
 }
 
 

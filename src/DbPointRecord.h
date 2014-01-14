@@ -31,7 +31,7 @@ namespace RTX {
     DbPointRecord();
     virtual ~DbPointRecord() {};
     
-    // end of the road for these guys
+    // end of the road for these guys; no virtuals.
     Point point(const string& id, time_t time);
     Point pointBefore(const string& id, time_t time);
     Point pointAfter(const string& id, time_t time);
@@ -41,14 +41,9 @@ namespace RTX {
     void reset();
     void reset(const string& id);
     
-    // pointRecord methods to override
-    //virtual std::string registerAndGetIdentifier(std::string recordName)=0;
-    //virtual std::vector<std::string> identifiers()=0;
+    virtual std::vector<std::pair<std::string, Units> >availableData() {};
     
-    // db connection
-    void setConnectionString(const std::string& connection);
-    const std::string& connectionString();
-    virtual void connect() throw(RtxException){};
+    virtual void dbConnect() throw(RtxException){};
     virtual bool isConnected(){return true;};
     
     // db searching prefs
@@ -65,6 +60,8 @@ namespace RTX {
       virtual const char* what() const throw()
       { return "Could not retrieve data.\n"; }
     };
+    
+    std::string errorMessage;
     
   protected:
     // fetch means cache the results

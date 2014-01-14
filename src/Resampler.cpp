@@ -15,7 +15,7 @@ using namespace RTX;
 using namespace std;
 
 Resampler::Resampler() {
-  
+  _mode = linear;
 }
 
 Resampler::~Resampler() {
@@ -39,6 +39,10 @@ Point Resampler::point(time_t time) {
       //time = clock()->timeBefore(time);
     }
     
+    if (!source()) {
+      return Point();
+    }
+    
     // now that that's settled, get some source points and interpolate.
     Point fromPoint, toPoint, newPoint, resampled;
     pair<time_t,time_t> sourceRange = expandedRange(source(), time,time);
@@ -47,13 +51,21 @@ Point Resampler::point(time_t time) {
     std::vector<Point> sourcePoints = source()->points(sourceRange.first, sourceRange.second);
     
     // check the source points
-    if (sourcePoints.size() < 2) {
+    bool tooFewPoints = (_mode == step) ? (sourcePoints.size() < 1) : (sourcePoints.size() < 2);
+    if (tooFewPoints) {
       return resampled;
     }
     
     // also check that there is some data in between the requested bounds
-    if ( sourcePoints.back().time < time || time < sourcePoints.front().time ) {
-      return resampled;
+    if (_mode == step) {
+      if ( time < sourcePoints.front().time ) {
+        return resampled;
+      }
+    }
+    else {
+      if ( sourcePoints.back().time < time || time < sourcePoints.front().time ) {
+        return resampled;
+      }
     }
     
     pVec_cIt vecStart = sourcePoints.begin();
@@ -64,6 +76,15 @@ Point Resampler::point(time_t time) {
     return resampled;
   }
 }
+
+Resampler::interpolateMode_t Resampler::mode() {
+  return _mode;
+}
+
+void Resampler::setMode(interpolateMode_t mode) {
+  _mode = mode;
+}
+
 
 #pragma mark - Protected Methods
 
@@ -86,19 +107,46 @@ std::vector<Point> Resampler::filteredPoints(TimeSeries::sharedPointer sourceTs,
   // get the source points
   std::vector<Point> sourcePoints = sourceTs->points(sourceRange.first, sourceRange.second);
   
-  // check the source points
-  if (sourcePoints.size() < 2) {
-    return resampled;
-  }
-    
-  // also check that there is some data in between the requested bounds
-  if ( sourcePoints.back().time < fromTime || toTime < sourcePoints.front().time ) {
-    return resampled;
+  
+  // check that it's ordered.
+  if (sourcePoints.size() > 0) {
+    time_t orderTime = sourcePoints.front().time;
+    BOOST_FOREACH(const Point& p, sourcePoints) {
+      if (p.time < orderTime) {
+        cerr << "not ordered" << endl;
+      }
+      orderTime = p.time;
+    }
   }
   
-  if ( fromTime < sourcePoints.front().time || sourcePoints.back().time < toTime) {
-    // source data doesn't cover my whole range...
-    cerr << "source data does not cover requested range" << endl;
+  
+  
+  // check the source points
+  bool tooFewPoints = (_mode == step) ? (sourcePoints.size() < 1) : (sourcePoints.size() < 2);
+  if (tooFewPoints) {
+    return resampled;
+  }
+
+  // also check that there is some data in between the requested bounds
+  if (_mode == step) {
+    if ( toTime < sourcePoints.front().time ) {
+      return resampled;
+    }
+    
+    if ( fromTime < sourcePoints.front().time ) {
+      // source data doesn't cover my whole range...
+      cerr << "source data does not cover requested range" << endl;
+    }
+  }
+  else {
+    if ( sourcePoints.back().time < fromTime || toTime < sourcePoints.front().time ) {
+      return resampled;
+    }
+    
+    if ( fromTime < sourcePoints.front().time || sourcePoints.back().time < toTime) {
+      // source data doesn't cover my whole range...
+      cerr << "source data does not cover requested range" << endl;
+    }
   }
   
   // reserve for the new points
@@ -130,11 +178,15 @@ std::vector<Point> Resampler::filteredPoints(TimeSeries::sharedPointer sourceTs,
   
   // get the filtering location iterator into position.
   // this dude should track pretty closely to "now".
-  while (filterLocation->time < now) {
+  while (filterLocation != sourceEnd && filterLocation->time < now) {
     ++filterLocation;
   }
+  if (filterLocation == sourceEnd) {
+    // at worst locate the last point
+    --filterLocation;
+  }
   
-  while (now <= toTime && filterLocation != sourceEnd) {
+  while (now <= toTime) {
     
     Point p = filteredSingle(sourceBegin, sourceEnd, filterLocation, now, sourceUnits);
     if (p.isValid) {
@@ -145,7 +197,10 @@ std::vector<Point> Resampler::filteredPoints(TimeSeries::sharedPointer sourceTs,
     }
     
     now = clock()->timeAfter(now);
-    
+    if (now == 0) {
+      // edge case - could be reached if a resampler doesn't have a clock
+      break;
+    }
   }
   
   
@@ -172,36 +227,63 @@ std::pair<time_t,time_t> Resampler::expandedRange(TimeSeries::sharedPointer sour
   
   time_t rangeStart = start, rangeEnd = end;
   
-  for (int iBackward = 0; iBackward < this->margin(); ++iBackward) {
-    Point behindPoint = sourceTs->pointBefore(rangeStart);
-    if (behindPoint.isValid) {
-      rangeStart = behindPoint.time;
+  int margin = this->margin();
+  Clock::sharedPointer otherClock = sourceTs->clock();
+  
+  if (otherClock->isRegular()) {
+    // much faster.
+    rangeStart = (otherClock->isValid(rangeStart)) ? rangeStart : otherClock->timeBefore(rangeStart);
+    rangeEnd = (otherClock->isValid(rangeEnd)) ? rangeEnd : otherClock->timeAfter(rangeEnd);
+    
+    rangeStart -= otherClock->period() * margin;
+    rangeEnd += otherClock->period() * margin;
+    
+  }
+  
+  else {
+    for (int iBackward = 0; iBackward < margin; ++iBackward) {
+      Point behindPoint = sourceTs->pointBefore(rangeStart);
+      if (behindPoint.isValid) {
+        rangeStart = behindPoint.time;
+      }
+      else {
+        break;
+      }
+    }
+    
+    for (int iForward = 0; iForward < margin; ++iForward) {
+      Point inFrontPoint = sourceTs->pointAfter(rangeEnd);
+      if (inFrontPoint.isValid) {
+        rangeEnd = inFrontPoint.time;
+      }
+      else {
+        break;
+      }
     }
   }
   
-  for (int iForward = 0; iForward < this->margin(); ++iForward) {
-    Point inFrontPoint = sourceTs->pointAfter(rangeEnd);
-    if (inFrontPoint.isValid) {
-      rangeEnd = inFrontPoint.time;
-    }
-  }
   
-  pair<time_t, time_t> newRange(0,0);
-  
-  newRange.first = rangeStart;
-  newRange.second = rangeEnd;
-  
+  pair<time_t, time_t> newRange(rangeStart,rangeEnd);
   return newRange;
 }
 
 
-// align the position, back, and fwd iterators to where the will need to be.
+// align the position, back, and fwd iterators to where they will need to be.
+// back and fwd are margin() points behind and forward of requested time.
+// the number of points between back and fwd is 2*margin(), or 2*margin()+1
+// if the requested time is on a point.
 
-void Resampler::alignVectorIterators(pVec_cIt& start, pVec_cIt& end, pVec_cIt& pos, time_t t, pVec_cIt& back, pVec_cIt& fwd) {
+bool Resampler::alignVectorIterators(pVec_cIt& start, pVec_cIt& end, pVec_cIt& pos, time_t t, pVec_cIt& back, pVec_cIt& fwd) {
   
   // move the position vector to my desired time, or slightly after.
+  while (pos != start && pos->time > t) {
+    --pos;
+  }
   while (pos != end && pos->time < t) {
     ++pos;
+  }
+  if (pos == end) {
+    --pos;
   }
   
   // let's get centered.
@@ -210,31 +292,30 @@ void Resampler::alignVectorIterators(pVec_cIt& start, pVec_cIt& end, pVec_cIt& p
   
   // get some vital info
   int marginDistance = this->margin();
-  int iForwards = (t < pos->time) ? 1 : 0; // are we in front of t? if so, we've got a head start.
-  int iBackwards = 0; // should def. be zero / sph
-  
-  // some quick checking that everything is in order
-  while (fwd != end && fwd->time < t) {
-    // if the fwd iterator time is before the desired time, nudge it forward
-    ++fwd; // this breakpoint should never fire -- right? let's check this.
-  }
-  while (back != start && t < back->time) {
-    // if the back iterator time is after the desired time, nudge it back.
-    --back;
-    iBackwards = 1; // if we end up here, then the backwards iterator is behind "t"
-  }
-  
+  int iForwards = (t < pos->time) ? 1 : 0; // are we ahead of t? if so, we've got a head start.
+  int iBackwards = (pos->time < t) ? 1 : 0; // are we behind t by one point? if so, we've got a head start
   
   // widen the bounds (within the allowable range) to account for my margin
-  while (fwd != end && ++iForwards <= marginDistance) {
+  while (fwd != end && iForwards < marginDistance) {
     ++fwd;
+    ++iForwards;
   }
   if (fwd == end) {
     --fwd;
+    --iForwards;
   }
-  while (back != start && ++iBackwards <= marginDistance) {
+  while (back != start && iBackwards < marginDistance) {
     --back;
+    ++iBackwards;
   }
+  
+  bool success = (iForwards == marginDistance && iBackwards == marginDistance);
+  
+  if (!success) {
+    cerr << "cannot align" << endl;
+  }
+  
+  return success;
   
   // ok, all done. everything is passed by ref.
   
@@ -248,21 +329,17 @@ void Resampler::alignVectorIterators(pVec_cIt& start, pVec_cIt& end, pVec_cIt& p
 Point Resampler::filteredSingle(pVec_cIt& vecStart, pVec_cIt& vecEnd, pVec_cIt& vecPos, time_t t, Units fromUnits) {
   Point sourceInterp;
   
-  // quick sanity check
-  if (vecPos == vecEnd) {
-    return Point();
-  }
-  
   pVec_cIt fwd_it = vecPos;
   pVec_cIt back_it = vecPos;
-  alignVectorIterators(vecStart, vecEnd, vecPos, t, back_it, fwd_it);
+  bool success = alignVectorIterators(vecStart, vecEnd, vecPos, t, back_it, fwd_it);
   
   
   // with any luck, at this point we have the back and fwd iterators positioned just right.
   // one on either side of the time point we need.
   // however, we may have been unable to accomplish this task.
-  if (t < back_it->time || fwd_it->time < t) {
-    return Point(); // invalid
+  bool notValid = (_mode == step) ? (t < back_it->time) : ( !success );
+  if (notValid) {
+    return Point(); // missing some source points
   }
   
   // it's possible that the vecPos is aligned right on the requested time, so check for that:
@@ -274,7 +351,7 @@ Point Resampler::filteredSingle(pVec_cIt& vecStart, pVec_cIt& vecEnd, pVec_cIt& 
     p1 = *back_it;
     p2 = *fwd_it;
     
-    sourceInterp = Point::linearInterpolate(p1, p2, t);
+    sourceInterp = (_mode == step) ? Point(t, p1.value, Point::good, p1.confidence) : Point::linearInterpolate(p1, p2, t);
     return Point::convertPoint(sourceInterp, fromUnits, this->units());
   }
   

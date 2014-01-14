@@ -31,11 +31,16 @@ namespace RTX {
   class BufferPointRecord : public PointRecord{
     
   public:
+    // types
+    typedef boost::circular_buffer<Point> PointBuffer_t;
+    typedef std::pair<PointBuffer_t, boost::shared_ptr<boost::signals2::mutex> > BufferMutexPair_t;
+    typedef std::map<std::string, BufferMutexPair_t> KeyedBufferMutexMap_t;
+    
     RTX_SHARED_POINTER(BufferPointRecord);
     BufferPointRecord();
     virtual ~BufferPointRecord() {};
     
-    virtual std::string registerAndGetIdentifier(std::string recordName);    // registering record names.
+    virtual std::string registerAndGetIdentifier(std::string recordName, Units dataUnits);    // registering record names.
     virtual std::vector<std::string> identifiers();
     
     virtual Point point(const string& identifier, time_t time);
@@ -52,17 +57,13 @@ namespace RTX {
     
     virtual std::ostream& toStream(std::ostream &stream);
     
-    // types
-    typedef boost::circular_buffer<Point> PointBuffer_t;
-    typedef std::pair<PointBuffer_t, boost::shared_ptr<boost::signals2::mutex> > BufferMutexPair_t;
-    typedef std::map<std::string, BufferMutexPair_t> KeyedBufferMutexMap_t;
-    
-    size_t _defaultCapacity;
     
   protected:
     
   private:
+    PointBuffer_t::iterator _cacheIterator;
     std::map<std::string, BufferMutexPair_t > _keyedBufferMutex;
+    size_t _defaultCapacity;
   };
   
   std::ostream& operator<< (std::ostream &out, BufferPointRecord &pr);

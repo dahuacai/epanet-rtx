@@ -32,7 +32,7 @@ MovingAverage::~MovingAverage() {
 #pragma mark - Added Methods
 
 void MovingAverage::setWindowSize(int numberOfPoints) {
-  resetCache();
+  //resetCache();
   _windowSize = numberOfPoints;
 }
 
@@ -64,17 +64,26 @@ Point MovingAverage::filteredSingle(pVec_cIt &vecStart, pVec_cIt &vecEnd, pVec_c
   
   pVec_cIt fwd_it = vecPos;
   pVec_cIt back_it = vecPos;
-  alignVectorIterators(vecStart, vecEnd, vecPos, t, back_it, fwd_it);
+  bool success = alignVectorIterators(vecStart, vecEnd, vecPos, t, back_it, fwd_it);
   
-  
+  // with any luck, at this point we have the back and fwd iterators positioned just right.
+  // +/- the margin from the time point we need.
+  // however, we may have been unable to accomplish this task.
+  if (!success) {
+    return Point(); // invalid
+  }
+
 //  cout << "=======================" << endl;
   // great, we've got points on either side.
   // now we take an average.
 //  int iPoints = 0;
   accumulator_set<double, stats<tag::mean> > meanAccumulator;
-  while (back_it != fwd_it+1) {
+  accumulator_set<double, stats<tag::mean> > confidenceAccum;
+  int nAccumulated = 0;
+  while (back_it != fwd_it+1 && nAccumulated++ < this->windowSize()) {
     Point p = *back_it;
     meanAccumulator(p.value);
+    confidenceAccum(p.confidence);
     ++back_it;
 //    ++iPoints;
 //    cout << p;
@@ -85,12 +94,10 @@ Point MovingAverage::filteredSingle(pVec_cIt &vecStart, pVec_cIt &vecEnd, pVec_c
   }
   
   double meanValue = mean(meanAccumulator);
-  meanValue = Units::convertValue(meanValue, fromUnits, this->units());
-  
-//  cout << "+++++ Mean value (" << iPoints << " points) = " << meanValue << endl;
-//  cout << "=======================" << endl;
-  
-  Point filtered(t, meanValue, Point::Qual_t::averaged);
+  double confidenceMean = mean(confidenceAccum);
+  //meanValue = Units::convertValue(meanValue, fromUnits, this->units());
+  Point meanPoint(t, meanValue, Point::good, confidenceMean);
+  Point filtered = Point::convertPoint(meanPoint, fromUnits, this->units());
   return filtered;
 }
 

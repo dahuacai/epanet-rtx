@@ -78,7 +78,7 @@ namespace RTX {
   
   
   
-  class  Clock {
+  class Clock {
     
   public:
     RTX_SHARED_POINTER(Clock);

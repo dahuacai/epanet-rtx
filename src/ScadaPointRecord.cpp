@@ -6,7 +6,7 @@
 //  See README.md and license.txt for more information
 //  
 
-#include <iostream>
+
 #include "ScadaPointRecord.h"
 #include <boost/foreach.hpp>
 

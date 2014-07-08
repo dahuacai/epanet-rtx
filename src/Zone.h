@@ -57,7 +57,7 @@ namespace RTX {
    */
   
   
-  class  Zone : public Element {
+  class Zone : public Element {
   public:
     RTX_SHARED_POINTER(Zone);
     Zone(const std::string& name);

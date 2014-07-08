@@ -24,7 +24,7 @@ namespace RTX {
   /*!
         Properties common to all elements.
   */
-  class  Element {
+  class Element {
   public:
     typedef enum { JUNCTION, TANK, RESERVOIR, PIPE, PUMP, VALVE, ZONE } element_t;  
       // please don't misuse this type enumeration!!!

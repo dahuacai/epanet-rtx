@@ -5,7 +5,6 @@
 //  Created by Sam Hatchett on 1/31/13.
 //
 //
-#include <iostream>
 
 #include "DbPointRecord.h"
 

@@ -41,7 +41,7 @@ namespace RTX {
    
    */
   
-  class  Model {
+  class Model {
   public:
     RTX_SHARED_POINTER(Model);
     

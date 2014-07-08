@@ -16,7 +16,7 @@ namespace RTX {
   /*!
    A Pipe is a hydraulic element that can carry water from one place to another.
    */
-  class  Pipe : public Link {
+  class Pipe : public Link {
   public:
     typedef enum {OPEN = true, CLOSED = false} status_t;
     RTX_SHARED_POINTER(Pipe);

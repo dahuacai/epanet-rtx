@@ -13,7 +13,7 @@
 
 namespace RTX {
   
-  class  FirstDerivative : public ModularTimeSeries {
+  class FirstDerivative : public ModularTimeSeries {
   public:
     RTX_SHARED_POINTER(FirstDerivative);
     FirstDerivative();

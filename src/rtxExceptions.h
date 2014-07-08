@@ -13,25 +13,25 @@
 
 namespace RTX {
   
-  class  RtxException : public std::exception {
+  class RtxException : public std::exception {
   public:
     virtual const char* what() const throw()
     { return "Unknown Exception\n"; }
   };
   
-  class  RtxIoException : public RtxException {
+  class RtxIoException : public RtxException {
   public:
     virtual const char* what() const throw()
     { return "I/O Exception\n"; }
   };
   
-  class  RtxMethodNotValid : public RtxException {
+  class RtxMethodNotValid : public RtxException {
   public:
     virtual const char* what() const throw()
     { return "Method not Valid\n"; }
   };
   
-  class  IncompatibleComponent : public RtxException {
+  class IncompatibleComponent : public RtxException {
     virtual const char* what() const throw()
     { return "Component not compatible\n"; }
   };

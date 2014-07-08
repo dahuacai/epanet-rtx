@@ -21,6 +21,4 @@
 #define RTX_STRINGS_ARE_EQUAL(x,y) (boost::algorithm::iequals(x,y))
 #define RTX_STRINGS_ARE_EQUAL_CS(x,y) (x.compare(y)==0)
 
-
-
 #endif

@@ -31,7 +31,7 @@ namespace RTX {
    
    */
   
-  class  ScadaPointRecord : public DbPointRecord {
+  class ScadaPointRecord : public DbPointRecord {
   public:
     RTX_SHARED_POINTER(ScadaPointRecord);
     ScadaPointRecord();

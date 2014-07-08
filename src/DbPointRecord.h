@@ -21,7 +21,7 @@ namespace RTX {
    
    */
   
-  class  DbPointRecord : public PointRecord {
+  class DbPointRecord : public PointRecord {
   public:
     typedef enum { LOCAL, UTC } time_format_t;
     RTX_SHARED_POINTER(DbPointRecord);

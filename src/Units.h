@@ -89,7 +89,7 @@ namespace RTX {
   
   
   
-  class  Units {
+  class Units {
   public:
     Units(double conversion = 1., int mass = 0, int length = 0, int time = 0, int current = 0, int temperature = 0, int amount = 0, int intensity = 0);
     

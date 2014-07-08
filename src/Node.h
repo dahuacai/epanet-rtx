@@ -24,7 +24,7 @@ namespace RTX {
   /*!
    A Node is a purely topological construct. It has x,y,z coordinates and references to Links.
    */
-  class   Node : public Element {
+  class Node : public Element {
   public:
     friend class Model;
     RTX_SHARED_POINTER(Node);

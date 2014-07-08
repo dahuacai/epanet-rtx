@@ -26,7 +26,7 @@ namespace RTX {
    
    */
     
-  class  EpanetModel : public Model {
+  class EpanetModel : public Model {
     
   public:
     RTX_SHARED_POINTER(EpanetModel);

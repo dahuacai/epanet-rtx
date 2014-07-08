@@ -12,7 +12,7 @@
 #include "Pipe.h"
 
 namespace RTX {
-  class  Pump : public Pipe {
+  class Pump : public Pipe {
   public:
     RTX_SHARED_POINTER(Pump);
     Pump(const std::string& name, Node::sharedPointer startNode, Node::sharedPointer endNode);

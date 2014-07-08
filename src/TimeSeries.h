@@ -23,7 +23,7 @@ namespace RTX {
 
   
   //! Responsible for keeping a container of points - also adding, retrieving, and getting information about points.
-  class  TimeSeries {    
+  class TimeSeries {    
   public:
     //! \var typedef boost::shared_ptr< TimeSeries > sharedPointer
     //! \brief Type definition for a shared pointer to a TimeSeries object.

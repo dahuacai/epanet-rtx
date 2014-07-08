@@ -40,7 +40,7 @@ namespace RTX {
    
    */
   
-  class  MysqlPointRecord : public DbPointRecord {
+  class MysqlPointRecord : public DbPointRecord {
   public:
     RTX_SHARED_POINTER(MysqlPointRecord);
     MysqlPointRecord();

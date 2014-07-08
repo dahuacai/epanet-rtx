@@ -21,7 +21,7 @@ namespace RTX {
    
    */
   
-  class EpanetSyntheticModel : public EpanetModel {
+  class  EpanetSyntheticModel : public EpanetModel {
     
   public:
     EpanetSyntheticModel();

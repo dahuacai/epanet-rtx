@@ -12,7 +12,7 @@
 #include "Pipe.h"
 
 namespace RTX {
-  class Valve : public Pipe {
+  class  Valve : public Pipe {
   public:
     RTX_SHARED_POINTER(Valve);
     Valve(const std::string& name, Node::sharedPointer startNode, Node::sharedPointer endNode);

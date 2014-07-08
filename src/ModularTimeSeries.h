@@ -38,7 +38,7 @@ namespace RTX {
    */
 
   
-  class ModularTimeSeries : public TimeSeries {
+  class  ModularTimeSeries : public TimeSeries {
     
   public:
     RTX_SHARED_POINTER(ModularTimeSeries);

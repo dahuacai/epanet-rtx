@@ -20,7 +20,7 @@ namespace RTX {
    transforming a tank level time series into a volume time series. Generally, can be used for dimensional conversions.
    */
   
-  class CurveFunction : public ModularTimeSeries {
+  class  CurveFunction : public ModularTimeSeries {
     
   public:
     RTX_SHARED_POINTER(CurveFunction);

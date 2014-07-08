@@ -17,7 +17,7 @@ namespace RTX {
   /*!
    A Junction is a Hydraulic element - any convergence of at least one link which can have a head value associated therewith.
    */
-  class Junction : public Node {
+  class  Junction : public Node {
   public:
     RTX_SHARED_POINTER(Junction);
     Junction(const std::string& name);

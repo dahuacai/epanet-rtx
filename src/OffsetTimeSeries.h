@@ -13,7 +13,7 @@
 #include "ModularTimeSeries.h"
 
 namespace RTX {
-  class OffsetTimeSeries : public ModularTimeSeries {
+  class  OffsetTimeSeries : public ModularTimeSeries {
   
   public:
     RTX_SHARED_POINTER(OffsetTimeSeries);

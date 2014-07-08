@@ -5,7 +5,7 @@
 //  Created by the EPANET-RTX Development Team
 //  See README.md and license.txt for more information
 //  
-
+#include <iostream>
 #include "Point.h"
 
 using namespace RTX;

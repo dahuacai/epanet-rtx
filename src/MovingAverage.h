@@ -25,7 +25,7 @@ using std::vector;
  */
 
 namespace RTX {
-  class MovingAverage : public ModularTimeSeries {
+  class  MovingAverage : public ModularTimeSeries {
   public:
     RTX_SHARED_POINTER(MovingAverage);
     MovingAverage();

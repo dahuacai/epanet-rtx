@@ -14,7 +14,7 @@
 
 namespace RTX {
   
-  class IrregularClock : public Clock {
+  class  IrregularClock : public Clock {
   public:
     RTX_SHARED_POINTER(IrregularClock);
     IrregularClock(PointRecord::sharedPointer pointRecord, std::string name);

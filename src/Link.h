@@ -20,7 +20,7 @@ namespace RTX {
   /*!
    A Link is a purely topological construct. It has start and end Node references.
    */
-  class Link : public Element {
+  class  Link : public Element {
   public:
     RTX_SHARED_POINTER(Link);
     std::pair<Node::sharedPointer, Node::sharedPointer> nodes();

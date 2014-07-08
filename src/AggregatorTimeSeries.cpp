@@ -17,13 +17,6 @@ void AggregatorTimeSeries::addSource(TimeSeries::sharedPointer timeSeries, doubl
   
   // check compatibility
   if (!isCompatibleWith(timeSeries)) throw IncompatibleComponent();
-  //This cycle is to prevent create the same time series
-  typedef std::pair<TimeSeries::sharedPointer,double> tsDoublePairType;
-  BOOST_FOREACH(tsDoublePairType ts, _tsList) {
-	  if (timeSeries == ts.first) {
-		  return;
-	  }
-  }
   
   if (units().isDimensionless() && sources().size() == 0) {
     // we have default units and no sources yet, so it would be safe to adopt the new source's units.

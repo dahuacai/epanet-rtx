@@ -413,7 +413,7 @@ void Model::setSimulationParameters(time_t time) {
   // for tanks, set the boundary head, but only if the tank reset clock has fired.
   BOOST_FOREACH(Tank::sharedPointer tank, this->tanks()) {
     if (tank->doesResetLevel() && tank->levelResetClock()->isValid(time) && tank->doesHaveHeadMeasure()) {
-      double levelValue = Units::convertValue(tank->levelMeasure()->point(time).value(), tank->level()->units(), headUnits());
+      double levelValue = Units::convertValue(tank->level()->point(time).value(), tank->level()->units(), headUnits());
       setTankLevel(tank->name(), levelValue);
     }
   }

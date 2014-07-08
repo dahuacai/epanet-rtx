@@ -110,15 +110,6 @@ void Zone::followJunction(Junction::sharedPointer junction) {
       }
       cout << "zone " << this->name() << " : adding source " << pipe->flowMeasure()->name() << endl;
       zoneDemand->addSource(pipe->flowMeasure(), direction);
-	  //when we have added The time series Source ,We should continue to follow Junctions
-
-	  if (directionIsOut) {
-		  followJunction(boost::static_pointer_cast<Junction>( pipe->to() ) );
-	  }
-	  else {
-		  followJunction(boost::static_pointer_cast<Junction>( pipe->from() ) );
-	  }
-
     }
   }
   

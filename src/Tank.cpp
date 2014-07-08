@@ -38,8 +38,6 @@ Tank::Tank(const std::string& name) : Junction(name) {
   _flowMeasure->setUnits(RTX_LITER_PER_SECOND);
   _flowMeasure->setSource(_volumeMeasure);
   _flowMeasure->setName(name + " flow measure");
-  //If there is a hydraulic head measurements, we must initialize reset clock
-  _resetLevel.reset(new Clock(0, 0));
 }
 
 Tank::~Tank() {

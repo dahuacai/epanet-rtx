@@ -1,5 +1,5 @@
 
-Firstly ,Thanks very much for Epanet-RTX team ! I  wished  my work  will be helpful to your term .
+Firstly ,Thanks very much for Epanet-RTX team ! I  wished  my work  would be helpful to your term .
 
 This package is based on author Jinduan Chen's package:epanet-rtx-jc.
 I made five important revision:
@@ -44,7 +44,7 @@ modify the file:sampletown_realtime.cfg, :type = "Resampler";//The original vers
 
 Now the program has been successful debuged,the correct results are written to the database  successfully.
 
-In addition, Now my program  is based on epanet-rtx-VS2008-win32 .if you want it  ,my email is chqahut@live.cn.
+In addition, Now my program  is based on epanet-rtx-VS2008-win32 .if you want it ,my email is chqahut@live.cn.
 
 Lastly,I am looking forward to you and the Epanet-RTX team immediate answer.
 

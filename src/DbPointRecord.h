@@ -40,12 +40,13 @@ namespace RTX {
     void addPoints(const string& id, std::vector<Point> points);
     void reset();
     void reset(const string& id);
-    
-    virtual std::vector<std::pair<std::string, Units> >availableData() {};
-    
+    //dhc-modify the function declaration -availableData
+   // virtual std::vector<std::pair<std::string, Units> >availableData() {};
+   // virtual std::vector<std::pair<std::string, Units> >availableData();
     virtual void dbConnect() throw(RtxException){};
     virtual bool isConnected(){return true;};
-    
+    const std::string& DbPointRecord::connectionString();//dhc  add statement
+    void DbPointRecord::setConnectionString(const std::string& connection);//dhc add statement
     // db searching prefs
     void setSearchDistance(time_t time);
     time_t searchDistance();

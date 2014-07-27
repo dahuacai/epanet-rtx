@@ -68,6 +68,7 @@ void Dma::addJunction(Junction::sharedPointer junction) {
   }
   else {
     _junctions.insert(make_pair(junction->name(), junction));
+	 cout << "adding junction " << junction->name() << std::endl;//dhc add
   }
 }
 
@@ -78,20 +79,84 @@ void Dma::removeJunction(Junction::sharedPointer junction) {
     cout << "removed junction: " << junction->name() << endl;
   }
 }
+void Dma::followJunction(Junction::sharedPointer junction, bool stopAtClosedLinks, vector<Pipe::sharedPointer> ignorePipes){
+	//// don't let us add the same junction twice.
+	////不要重复添加同一个的节点
+	if (!junction||_junctions.find(junction->name()) != _junctions.end()) {
+		return;
+	}
+	// add the junction to my list
+	//添加节点
+	this->addJunction(junction);
+
+	BOOST_FOREACH(Link::sharedPointer link, junction->links()) {
+	cout << "... examining pipe " << link->name() << endl;
+	Pipe::sharedPointer pipe = boost::static_pointer_cast<Pipe>(link);
+	Link::direction_t dir = pipe->directionRelativeToNode(junction);
+	
+	// sanity
+	if (dir!=Link::outDirection&&dir!=Link::inDirection ) {
+		cerr << "Could not resolve start/end node(s) for pipe: " << pipe->name() << endl;
+		continue;
+	}
+	
+	if (pipe->doesHaveFlowMeasure()) {
+		 _measuredBoundaryPipesDirectional.insert(make_pair(pipe, dir));
+	//注意，insert时候要检查是否有重复
+	if (dir==Link::outDirection) {
+		followJunction(boost::static_pointer_cast<Junction>( pipe->to() ), stopAtClosedLinks , ignorePipes);
+		}
+	else {
+		followJunction(boost::static_pointer_cast<Junction>( pipe->from() ) , stopAtClosedLinks, ignorePipes);
+		}
+	// should we ignore it?
+	if (std::find(ignorePipes.begin(), ignorePipes.end(), pipe) == ignorePipes.end()) { // not ignored
+		// not on the ignore list - so we assume that the pipe could actually be a boundary pipe. do not go through the pipe.
+		// if the pipe IS on the ignore list, then follow it with the BFS.
+		continue;
+	 }
+
+   } 
+	// make sure we can follow this link,
+	// then get this link's nodes
+	//确定我能追踪link
+	//然后得到link的节点
+	else if (!pipe->doesHaveFlowMeasure()) {
+		// follow each of the link's nodes.
+		if (dir==Link::outDirection) {//若果遍历的这个点相对于与之连接的遍历的管段是出水口（一个管段有两个节点，接近水源的一侧节点是from节点），那么遍历它要流向的节点
+			followJunction(boost::static_pointer_cast<Junction>( pipe->to() ), stopAtClosedLinks, ignorePipes);
+		}
+		else {//否则这个节点相对于连接的管段是流入点，遍历他的源头，即水源节点
+			followJunction(boost::static_pointer_cast<Junction>( pipe->from()) , stopAtClosedLinks, ignorePipes  );
+		}
+	}
+
+	 if ( stopAtClosedLinks && isAlwaysClosed(pipe) ) {
+		// stop here as well - a potential closed perimeter pipe
+		Pipe::direction_t dir = pipe->directionRelativeToNode(junction);
+		_closedBoundaryPipesDirectional.insert(make_pair(pipe, dir));
+		if (std::find(ignorePipes.begin(), ignorePipes.end(), pipe) == ignorePipes.end()) { // not ignored
+			continue;
+			}
+		}
+  }
+}
 
 void Dma::enumerateJunctionsWithRootNode(Junction::sharedPointer junction, bool stopAtClosedLinks, vector<Pipe::sharedPointer> ignorePipes) {
   
-  bool doesContainReservoir = false;
-  
-  //cout << "Starting At Root Junction: " << junction->name() << endl;
+ bool doesContainReservoir = false;
+
+  cout << "Starting At Root Junction: " << junction->name() << endl;
   
   // breadth-first search.
-  deque<Junction::sharedPointer> candidateJunctions;
+ 
+
+deque<Junction::sharedPointer> candidateJunctions;
   candidateJunctions.push_back(junction);
   
   while (!candidateJunctions.empty()) {
-    Junction::sharedPointer thisJ = candidateJunctions.front();
-    //cout << " - adding: " << thisJ->name() << endl;
+    Junction::sharedPointer thisJ = candidateJunctions.front();//dhc modify 
+    cout << " - adding: " << thisJ->name() << endl; //DHC enable
     this->addJunction(thisJ);
     vector<Link::sharedPointer> connectedLinks = thisJ->links();
     BOOST_FOREACH(Link::sharedPointer l, connectedLinks) {
@@ -101,13 +166,13 @@ void Dma::enumerateJunctionsWithRootNode(Junction::sharedPointer junction, bool 
         // look here - it's a potential dma perimeter pipe.
         
         // capture the pipe and direction - this list will be pruned later
-        Link::direction_t dir = p->directionRelativeToNode(thisJ);
+        Link::direction_t dir = p->directionRelativeToNode(thisJ);//当前节点相对于这个节点是流出节点，还是流入节点
         _measuredBoundaryPipesDirectional.insert(make_pair(p, dir));
         // should we ignore it?
         if (std::find(ignorePipes.begin(), ignorePipes.end(), p) == ignorePipes.end()) { // not ignored
           // not on the ignore list - so we assume that the pipe could actually be a boundary pipe. do not go through the pipe.
           // if the pipe IS on the ignore list, then follow it with the BFS.
-          continue;
+          continue;//为什么遍历到有测量管段直接跳出循环，而不继续遍历相连接点？？虽然对于这个管，网结果是正确的（好吧，也许为了省内存吧）
         }
         
       }
@@ -128,12 +193,17 @@ void Dma::enumerateJunctionsWithRootNode(Junction::sharedPointer junction, bool 
         if (candidateJ != thisJ && !this->doesHaveJunction(candidateJ)) {
           // add to follow list
           candidateJunctions.push_back(candidateJ);
+		  
+		  //this->addJunction(candidateJ);//dhc 
+		  cout << " - adding: " <<candidateJ ->name() << endl; //DHC add
         }
       }
     } // foreach connected link
-    candidateJunctions.pop_front();
+    candidateJunctions.pop_front();//dhc enable comment
   }
-  
+
+ //followJunction( junction, stopAtClosedLinks,  ignorePipes);//这是另一种遍历管网的方法，它可以一次大循环遍历整个管网（递归调用），但是占用内存比上面的大，慎用,目前仍有BUG
+
   // cleanup orphaned pipes (pipes which have been identified as perimeters, but have both start/end nodes listed inside the dma)
   // this set may include "ignored" pipes.
   

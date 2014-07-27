@@ -11,7 +11,8 @@
 #include "rtxMacros.h"
 #include "CurveFunction.h"
 
-#include <types.h>
+#include "epanet/src/types.h"
+//#include <types.h>
 
 #include <boost/range/adaptors.hpp>
 
@@ -53,15 +54,15 @@ void EpanetModel::loadModelFromFile(const std::string& filename) throw(std::exce
   
 }
 
-
+//获取模型文件基本参数和设定基本的RTX模型
 void EpanetModel::useEpanetFile(const std::string& filename) {
   
-  Model::loadModelFromFile(filename);
+  Model::loadModelFromFile(filename);//获取输入的水网模型文件路径信息
   
   Units volumeUnits(0);
   long enTimeStep;
-  
-  ENcheck( ENopen((char*)filename.c_str(), (char*)"", (char*)""), "ENopen" );
+  //ENopen()函数做了N多事情
+  ENcheck( ENopen((char*)filename.c_str(), (char*)"", (char*)""), "ENopen" );//opens EPANET input file & reads in network data
   
   // get units from epanet
   int flowUnitType = 0;
@@ -127,14 +128,16 @@ void EpanetModel::useEpanetFile(const std::string& filename) {
   
   
   // what units are quality in? who knows!
-  this->setQualityUnits(RTX_MICROSIEMENS_PER_CM);
-  ENcheck(ENsetqualtype(CHEM, (char*)"rtxConductivity", (char*)"us/cm", (char*)""), "ENsetqualtype");
-  
+  //this->setQualityUnits(RTX_MILLIGRAMS_PER_LITER);//dhc disable because line 75 have been set
+ 
+  //ENcheck(ENsetqualtype(CHEM, (char*)"rtxConductivity", (char*)"us/cm", (char*)""), "ENsetqualtype");//dhc disable  because line 73 have been set
   // get simulation parameters
   ENcheck(ENgettimeparam(EN_HYDSTEP, &enTimeStep), "ENgettimeparam EN_HYDSTEP");
   
   this->setHydraulicTimeStep((int)enTimeStep);
   
+
+
   ENcheck(ENopenH(), "ENopenH");
   ENcheck(ENinitH(10), "ENinitH");
   ENcheck(ENopenQ(), "ENopenQ");
@@ -239,6 +242,7 @@ void EpanetModel::createRtxWrappers() {
           //cout << endl;
         }
         else {
+		  //是圆柱形tank
           // it's a cylindrical tank - invent a curve
           double minVolume, maxVolume;
           double minLevel, maxLevel;
@@ -247,7 +251,7 @@ void EpanetModel::createRtxWrappers() {
           ENcheck(ENgetnodevalue(iNode, EN_MINLEVEL, &minLevel), "EN_MINLEVEL");
           ENcheck(ENgetnodevalue(iNode, EN_MINVOLUME, &minVolume), "EN_MINVOLUME");
           ENcheck(ENgetnodevalue(iNode, EN_MAXVOLUME, &maxVolume), "EN_MAXVOLUME");
-          
+        //  ENcheck( ENgetcoord(iNode, &x, &y), "ENgetcoord");//dhc
           curveGeometry.push_back(make_pair(minLevel, minVolume));
           curveGeometry.push_back(make_pair(maxLevel, maxVolume));
           

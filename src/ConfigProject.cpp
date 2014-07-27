@@ -33,6 +33,7 @@
 // conditional compilation
 #ifndef RTX_NO_ODBC
   #include "OdbcPointRecord.h"
+
 #endif
 #ifndef RTX_NO_MYSQL
   #include "MysqlPointRecord.h"
@@ -51,7 +52,7 @@ namespace RTX {
   public:
     static PointRecord::sharedPointer createCsvPointRecord(Setting& setting);
 #ifndef RTX_NO_ODBC
-    static PointRecord::sharedPointer createOdbcPointRecord(Setting& setting);
+  //  static PointRecord::sharedPointer createOdbcPointRecord(Setting& setting);
 #endif
 #ifndef RTX_NO_MYSQL
     static PointRecord::sharedPointer createMySqlPointRecord(Setting& setting);
@@ -66,7 +67,7 @@ ConfigProject::ConfigProject() {
   // register point record and time series types to their proper creators
   _pointRecordPointerMap["CSV"] = PointRecordFactory::createCsvPointRecord;
   #ifndef RTX_NO_ODBC
-  _pointRecordPointerMap["SCADA"] = PointRecordFactory::createOdbcPointRecord;
+ // _pointRecordPointerMap["SCADA"] = PointRecordFactory::createOdbcPointRecord;
   #endif
   #ifndef RTX_NO_MYSQL
   _pointRecordPointerMap["MySQL"] = PointRecordFactory::createMySqlPointRecord;
@@ -158,16 +159,16 @@ void ConfigProject::loadProjectFile(const string& path) {
   
   if ( !root.exists("configuration") ) {
     root.add("configuration", Setting::TypeGroup);
-  }
+  } 
   Setting& config = root["configuration"];
-  
+
   // get the first set - point records.
   if ( !config.exists("records") ) {
     config.add("records", Setting::TypeList);
   } else {
     Setting& records = config["records"];
     createPointRecords(records);
-  }
+ }
   
   // get clocks
   if ( !config.exists("clocks") ) {
@@ -175,7 +176,7 @@ void ConfigProject::loadProjectFile(const string& path) {
   } else {
     Setting& clockGroup = config["clocks"];
     createClocks(clockGroup);
-  }
+}
   
   // get timeseries
   if ( !config.exists("timeseries") ) {
@@ -183,7 +184,7 @@ void ConfigProject::loadProjectFile(const string& path) {
   } else {
     Setting& timeSeriesGroup = config["timeseries"];
     createTimeSeriesList(timeSeriesGroup);
-  }
+ }
   
   // make a new model
   if ( !config.exists("model") ) {
@@ -191,7 +192,7 @@ void ConfigProject::loadProjectFile(const string& path) {
   } else {
     Setting& modelGroup = config["model"];
     createModel(modelGroup);
-  }
+ }
   
   // set simulation defaults
   if ( !config.exists("simulation") ) {
@@ -199,7 +200,7 @@ void ConfigProject::loadProjectFile(const string& path) {
   } else {
     Setting& simulationGroup = config["simulation"];
     createSimulationDefaults(simulationGroup);
-  }
+ }
   
   // make dmas
   if ( !config.exists("dma") ) {
@@ -224,9 +225,9 @@ void ConfigProject::saveProjectFile(const string &path) {
   // unimplemented
 }
 
-
-RTX_LIST<TimeSeries::sharedPointer> ConfigProject::timeSeries() {
-  
+//dhc-enable comment to avoid repeating defined
+/*RTX_LIST<TimeSeries::sharedPointer> ConfigProject::timeSeries() {
+	
 }
 
 RTX_LIST<Clock::sharedPointer> ConfigProject::clocks() {
@@ -236,6 +237,7 @@ RTX_LIST<Clock::sharedPointer> ConfigProject::clocks() {
 RTX_LIST<PointRecord::sharedPointer> ConfigProject::records() {
   
 }
+*/
 
 
 map<string, TimeSeries::sharedPointer> ConfigProject::timeSeries() {
@@ -335,46 +337,47 @@ PointRecord::sharedPointer PointRecordFactory::createCsvPointRecord(Setting& set
 }
 
 #pragma mark - Conditional DB Methods
-
+//dhc disable odbc for some bug 
 #ifndef RTX_NO_ODBC
 
-PointRecord::sharedPointer PointRecordFactory::createOdbcPointRecord(libconfig::Setting &setting) {
-  OdbcPointRecord::sharedPointer r( new OdbcPointRecord() );
-  // create the initialization string for the scada point record.
-  string initString, name;
-  if ( !setting.lookupValue("connection", initString) || !setting.lookupValue("name", name) ) {
-    cerr << "odbc record name or connection not valid -- check config";
-  }
-  
-  if (setting.exists("querySyntax")) {
-    libconfig::Setting& syntax = setting["querySyntax"];
-    string table    = syntax["Table"];
-    string dateCol  = syntax["DateColumn"];
-    string tagCol   = syntax["TagColumn"];
-    string valueCol = syntax["ValueColumn"];
-    string qualCol  = syntax["QualityColumn"];
-//    r->setTableColumnNames(table, dateCol, tagCol, valueCol, qualCol);
-  }
-  
-  if (setting.exists("connectorType")) {
-    // a pre-formatted connector type. yay!
-    string type = setting["connectorType"];
-    OdbcPointRecord::Sql_Connector_t connT = OdbcPointRecord::typeForName(type);
-    if (connT != OdbcPointRecord::NO_CONNECTOR) {
-      //cout << "connector type " << type << " recognized" << endl;
-      r->setConnectorType(connT);
-    }
-    else {
-      cerr << "connector type " << type << " not set" << endl;
-    }
-  }
-  else {
-    cerr << "connector type not specified" << endl;
-  }
-  
-//  r->setConnectionString(initString);
-  return r;
-}
+//PointRecord::sharedPointer PointRecordFactory::createOdbcPointRecord(libconfig::Setting &setting) {
+//	OdbcPointRecord::sharedPointer r( new OdbcPointRecord() );    
+// 
+//  // create the initialization string for the scada point record.
+//  string initString, name;
+//  if ( !setting.lookupValue("connection", initString) || !setting.lookupValue("name", name) ) {
+//    cerr << "odbc record name or connection not valid -- check config";
+//  }
+//  
+//  if (setting.exists("querySyntax")) {
+//    libconfig::Setting& syntax = setting["querySyntax"];
+//    string table    = syntax["Table"];
+//    string dateCol  = syntax["DateColumn"];
+//    string tagCol   = syntax["TagColumn"];
+//    string valueCol = syntax["ValueColumn"];
+//    string qualCol  = syntax["QualityColumn"];
+////    r->setTableColumnNames(table, dateCol, tagCol, valueCol, qualCol);
+//  }
+//  
+//  if (setting.exists("connectorType")) {
+//    // a pre-formatted connector type. yay!
+//    string type = setting["connectorType"];
+//    OdbcPointRecord::Sql_Connector_t connT = OdbcPointRecord::typeForName(type);
+//    if (connT != OdbcPointRecord::NO_CONNECTOR) {
+//      //cout << "connector type " << type << " recognized" << endl;
+//      r->setConnectorType(connT);
+//    }
+//    else {
+//      cerr << "connector type " << type << " not set" << endl;
+//    }
+//  }
+//  else {
+//    cerr << "connector type not specified" << endl;
+//  }
+//  
+////  r->setConnectionString(initString);
+//  return r;
+//}
 
 #endif
 
@@ -384,9 +387,9 @@ PointRecord::sharedPointer PointRecordFactory::createMySqlPointRecord(libconfig:
   string name = setting["name"];
   MysqlPointRecord::sharedPointer record( new MysqlPointRecord() );
   string initString = setting["connection"];
-//  record->setConnectionString(initString);
-  //record->setName(name);
-  //record->dbConnect(); // leaving this to application code
+  record->setConnectionString(initString);
+  record->setName(name);
+  record->dbConnect(); // leaving this to application code
   return record;
 }
 

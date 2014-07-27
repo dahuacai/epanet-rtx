@@ -175,7 +175,9 @@ std::vector<std::string> SqlitePointRecord::identifiers() {
 }
 
 std::vector<std::pair<std::string, Units> > SqlitePointRecord::availableData() {
-  // todo
+   std::vector<std::pair<std::string, Units> > temp;//dhc-we must return a value 
+	return temp ;//dhc-we must return a value 
+	// todo
 }
 
 

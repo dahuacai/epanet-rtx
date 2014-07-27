@@ -30,13 +30,14 @@ DbPointRecord::DbPointRecord() : request("",0,0) {
   errorMessage = "Not Connected";
 }
 
-
-//void DbPointRecord::setConnectionString(const std::string& connection) {
-//  _connectionString = connection;
-//}
-//const std::string& DbPointRecord::connectionString() {
-//  return _connectionString;
-//}
+//dhc-enable
+void DbPointRecord::setConnectionString(const std::string& connection) {
+  _connectionString = connection;
+}
+//dhc-enable 
+const std::string& DbPointRecord::connectionString() {
+  return _connectionString;
+}
 
 void DbPointRecord::setSearchDistance(time_t time) {
   _searchDistance = time;
@@ -232,11 +233,11 @@ void DbPointRecord::addPoints(const string& id, std::vector<Point> points) {
 
 
 void DbPointRecord::reset() {
-  DB_PR_SUPER::reset();
-  //this->truncate();
+  //DB_PR_SUPER::reset();//dhc disable 
+  this->truncate();//dhc enable 
 }
-
-
+ 
+ 
 void DbPointRecord::reset(const string& id) {
   // deprecate?
   //cout << "Whoops - don't use this" << endl;

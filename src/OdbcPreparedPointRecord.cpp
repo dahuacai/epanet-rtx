@@ -7,7 +7,6 @@
 //
 
 #include "OdbcPreparedPointRecord.h"
-
 #include <boost/foreach.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string.hpp>
@@ -19,7 +18,7 @@ using namespace std;
 
 boost::posix_time::ptime _pTimeEpoch;
 
-OdbcPreparedPointRecord::OdbcPreparedPointRecord() : _timeFormat(UTC){
+OdbcPreparedPointRecord::OdbcPreparedPointRecord() : _timeFormat(PointRecordTime::UTC){
   _connectionOk = false;
   _connectorType = NO_CONNECTOR;
   
@@ -207,6 +206,7 @@ void OdbcPreparedPointRecord::rebuildQueries() {
   _query.tagNameInd = SQL_NTS;
   
 }
+
 
 void OdbcPreparedPointRecord::dbConnect() throw(RtxException) {
   _connectionOk = false;
@@ -419,24 +419,24 @@ Point OdbcPreparedPointRecord::selectPrevious(const string& id, time_t time) {
 
 
 
-// insertions or alterations may choose to ignore / deny
+ //insertions or alterations may choose to ignore / deny
 void OdbcPreparedPointRecord::insertSingle(const string& id, Point point) {
-  
+  ;
 }
 
 
 void OdbcPreparedPointRecord::insertRange(const string& id, vector<Point> points) {
-  
+  ;
 }
 
 
 void OdbcPreparedPointRecord::removeRecord(const string& id) {
-  
+  ;
 }
 
 
 void OdbcPreparedPointRecord::truncate() {
-  
+  ;
 }
 
 
@@ -455,8 +455,22 @@ ostream& OdbcPreparedPointRecord::toStream(ostream &stream) {
 
 #pragma mark - Internal (private) methods
 
+std::string OdbcPreparedPointRecord::dsn()
+{
+	return _dsn;
+}
 
-vector<Point> OdbcPointRecord::pointsWithStatement(const string& id, SQLHSTMT statement, time_t startTime, time_t endTime) {
+std::string OdbcPreparedPointRecord::uid()
+{
+	return _uid;
+}
+
+std::string OdbcPreparedPointRecord::pwd()
+{
+	return _pwd;
+}
+
+vector<Point> OdbcPreparedPointRecord::pointsWithStatement(const string& id, SQLHSTMT statement, time_t startTime, time_t endTime) {
   
   if (!_connectionOk) {
     this->dbConnect();
@@ -539,7 +553,7 @@ vector<Point> OdbcPointRecord::pointsWithStatement(const string& id, SQLHSTMT st
 
 
 
-void OdbcPointRecord::bindOutputColumns(SQLHSTMT statement, ScadaRecord* record) {
+void OdbcPreparedPointRecord::bindOutputColumns(SQLHSTMT statement, ScadaRecord* record) {
   SQL_CHECK(SQLBindCol(statement, 1, SQL_TYPE_TIMESTAMP, &(record->time), NULL, &(record->timeInd) ), "SQLBindCol", statement, SQL_HANDLE_STMT);
   //SQL_CHECK(SQLBindCol(statement, 2, SQL_C_CHAR, record->tagName, MAX_SCADA_TAG, &(record->tagNameInd) ), "SQLBindCol", statement, SQL_HANDLE_STMT);
   SQL_CHECK(SQLBindCol(statement, 2, SQL_DOUBLE, &(record->value), 0, &(record->valueInd) ), "SQLBindCol", statement, SQL_HANDLE_STMT);
@@ -549,16 +563,16 @@ void OdbcPointRecord::bindOutputColumns(SQLHSTMT statement, ScadaRecord* record)
 
 
 
-SQL_TIMESTAMP_STRUCT OdbcPointRecord::sqlTime(time_t unixTime) {
+SQL_TIMESTAMP_STRUCT OdbcPreparedPointRecord::sqlTime(time_t unixTime) {
   SQL_TIMESTAMP_STRUCT sqlTimestamp;
   struct tm myTMstruct;
   struct tm* pTMstruct = &myTMstruct;
   
   // time format (local/utc)
-  if (timeFormat() == UTC) {
+  if (timeFormat() == PointRecordTime::UTC) {
     pTMstruct = gmtime(&unixTime);
   }
-  else if (timeFormat() == LOCAL) {
+  else if (timeFormat() ==PointRecordTime:: LOCAL) {
     pTMstruct = localtime(&unixTime);
   }
 	
@@ -576,7 +590,7 @@ SQL_TIMESTAMP_STRUCT OdbcPointRecord::sqlTime(time_t unixTime) {
 }
 
 
-time_t OdbcPointRecord::sql_to_time_t( const SQL_TIMESTAMP_STRUCT& sqlTime ) {
+time_t OdbcPreparedPointRecord::sql_to_time_t( const SQL_TIMESTAMP_STRUCT& sqlTime ) {
   
   time_t uTime;
   struct tm tmTime;
@@ -612,7 +626,7 @@ time_t OdbcPointRecord::sql_to_time_t( const SQL_TIMESTAMP_STRUCT& sqlTime ) {
 }
 
 
-time_t OdbcPointRecord::boost_convert_tm_to_time_t(const struct tm &tmStruct) {
+time_t OdbcPreparedPointRecord::boost_convert_tm_to_time_t(const struct tm &tmStruct) {
   boost::posix_time::ptime pt = boost::posix_time::ptime_from_tm(tmStruct);
   boost::posix_time::time_duration::sec_type x = (pt - _pTimeEpoch).total_seconds();
   return time_t(x);
@@ -622,7 +636,7 @@ time_t OdbcPointRecord::boost_convert_tm_to_time_t(const struct tm &tmStruct) {
 
 
 
-SQLRETURN OdbcPointRecord::SQL_CHECK(SQLRETURN retVal, string function, SQLHANDLE handle, SQLSMALLINT type) throw(string)
+SQLRETURN OdbcPreparedPointRecord::SQL_CHECK(SQLRETURN retVal, string function, SQLHANDLE handle, SQLSMALLINT type) throw(string)
 {
 	if(!SQL_SUCCEEDED(retVal)) {
     string errorMessage;
@@ -633,7 +647,7 @@ SQLRETURN OdbcPointRecord::SQL_CHECK(SQLRETURN retVal, string function, SQLHANDL
 }
 
 
-string OdbcPointRecord::extract_error(string function, SQLHANDLE handle, SQLSMALLINT type)
+string OdbcPreparedPointRecord::extract_error(string function, SQLHANDLE handle, SQLSMALLINT type)
 {
   SQLINTEGER	 i = 0;
   SQLINTEGER	 native;

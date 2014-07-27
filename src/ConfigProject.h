@@ -69,10 +69,14 @@ namespace RTX {
     void loadProjectFile(const string& path);
     void saveProjectFile(const string& path);
     void clear();
-    
-    RTX_LIST<TimeSeries::sharedPointer> timeSeries();
+   //dhc-enable comment to avoid repeating defined
+   /* RTX_LIST<TimeSeries::sharedPointer> timeSeries();
     RTX_LIST<Clock::sharedPointer> clocks();
-    RTX_LIST<PointRecord::sharedPointer> records();
+    RTX_LIST<PointRecord::sharedPointer> records();*/
+	
+	map<string, TimeSeries::sharedPointer> ConfigProject::timeSeries();
+	map<string, Clock::sharedPointer> ConfigProject::clocks();
+    map<string,  PointRecord::sharedPointer> records();
     
     PointRecord::sharedPointer defaultRecord();
     Model::sharedPointer model();
@@ -115,7 +119,7 @@ namespace RTX {
     void configurePumpEnergyMeasure(Setting &setting, Element::sharedPointer pump);
     
     void createModel(Setting& setting);
-    
+
   private:
     void createPointRecords(Setting& records);
     void createClocks(Setting& clockGroup);
@@ -135,6 +139,8 @@ namespace RTX {
     map<string, TimeSeries::sharedPointer> _timeSeriesList;
     map<string, PointRecord::sharedPointer> _pointRecordList;
     map<string, Clock::sharedPointer> _clockList;
+	//dhc-add function declaration-pointRecords
+    map<string, PointRecord::sharedPointer>pointRecords();
     PointRecord::sharedPointer _defaultRecord;
     Model::sharedPointer _model;
     std::string _configPath;

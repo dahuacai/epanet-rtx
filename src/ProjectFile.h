@@ -42,15 +42,15 @@ namespace RTX {
     virtual void loadProjectFile(const string& path) = 0;
     virtual void saveProjectFile(const string& path) = 0;
     virtual void clear() = 0;
-    
-    virtual RTX_LIST<TimeSeries::sharedPointer> timeSeries() = 0;
+      //dhc-enable comment to avoid repeating defined 
+  /*  virtual RTX_LIST<TimeSeries::sharedPointer> timeSeries() = 0;
     virtual RTX_LIST<Clock::sharedPointer> clocks() = 0;
-    virtual RTX_LIST<PointRecord::sharedPointer> records() = 0;
+    virtual RTX_LIST<PointRecord::sharedPointer> records() = 0;*/
     virtual Model::sharedPointer model() = 0;
-    
-    virtual void insertTimeSeries(TimeSeries::sharedPointer ts) = 0;
+   //dhc-enable comment to  avoid being abstract class->configproject 
+ /*   virtual void insertTimeSeries(TimeSeries::sharedPointer ts) = 0;
     virtual void insertClock(Clock::sharedPointer clock) = 0;
-    virtual void insertRecord(PointRecord::sharedPointer record) = 0;
+    virtual void insertRecord(PointRecord::sharedPointer record) = 0;*/
     
   };
   

@@ -126,11 +126,11 @@ void PointRecord::addPoints(const string& identifier, std::vector<Point> points)
 
 
 void PointRecord::reset() {
-  
+	_pointCache.clear();
+
 }
 
 void PointRecord::reset(const string& identifier) {
-  
 }
 
 

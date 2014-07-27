@@ -69,7 +69,8 @@ namespace RTX {
     class OdbcSqlHandle {
     public:
       SQLHENV SCADAenv;
-      SQLHDBC SCADAdbc;
+      SQLHDBC SCADAdbc; 
+	  SQLHSTMT SCADAstmt, rangeStatement, lowerBoundStatement, upperBoundStatement, SCADAtimestmt;//add for odbcpreparedpointrecord;
     };
     
     static std::map<Sql_Connector_t, OdbcQuery> queryTypes();
@@ -106,11 +107,16 @@ namespace RTX {
     
     // abstract stubs
     virtual void rebuildQueries(); // must call base
-    virtual std::vector<Point> selectRange(const std::string& id, time_t startTime, time_t endTime)=0;
+   /* 
+	virtual std::vector<Point> selectRange(const std::string& id, time_t startTime, time_t endTime)=0;
     virtual Point selectNext(const std::string& id, time_t time)=0;
     virtual Point selectPrevious(const std::string& id, time_t time)=0;
-    
-    
+	 */
+	//dhc modify for avoiding that abstract class cannot be instantiated(in configproject.cpp : Line 343 OdbcPointRecord::sharedPointer r( new OdbcPointRecord() );   )
+	/* virtual std::vector<Point> selectRange(const std::string& id, time_t startTime, time_t endTime);
+	 virtual Point selectNext(const std::string& id, time_t time);
+	 virtual Point selectPrevious(const std::string& id, time_t time);
+    */
     
     // insertions or alterations may choose to ignore / deny
     // pseudo-abstract base is no-op

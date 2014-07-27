@@ -10,6 +10,7 @@
 #define __epanet_rtx__PointRecordTime__
 
 #include <iostream>
+#include<windows.h>//and this file to avoid the cross-platform problems
 #include <time.h>
 #include <sqltypes.h>
 

@@ -617,6 +617,8 @@ void Model::setSimulationParameters(time_t time) {
   //////////////////////////////
   BOOST_FOREACH(Junction::sharedPointer j, this->junctions()) {
     if (j->doesHaveQualitySource()) {
+		Units	test_uints1= j->qualitySource()->units();//dhc
+		Units	test_uints2=qualityUnits();//dhc
       double quality = Units::convertValue(j->qualitySource()->pointAtOrBefore(time).value, j->qualitySource()->units(), qualityUnits());
       setJunctionQuality(j->name(), quality);
     }

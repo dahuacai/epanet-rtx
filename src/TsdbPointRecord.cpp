@@ -10,14 +10,15 @@
 #include <boost/foreach.hpp>
 #include <boost/regex.hpp>
 #include <sys/types.h>
-#include <sys/socket.h>
+//#include<Winsock2.h>//#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+//#include <unistd.h>//in windows it is windows.h
 #include <errno.h>
 #include <string.h>
-#include <netdb.h>
-#include <netinet/in.h>
+#include <ws2tcpip.h>//include :windows.h¡¢winsock2.h¡¢ws2def.h 
+//#include <netdb.h>
+//#include <netinet/in.h>
 
 using namespace std;
 using namespace RTX;
@@ -51,9 +52,8 @@ void TsdbPointRecord::dbConnect() throw(RtxException) {
   
   
   
-  
-  
-  int maxDataSize = 2560;
+   
+ const int maxDataSize = 2560;//dhc-add "const"
   int numbytes;
   char buf[maxDataSize];
   struct addrinfo hints, *servinfo, *p;
@@ -73,13 +73,13 @@ void TsdbPointRecord::dbConnect() throw(RtxException) {
   
   // loop through all the results and connect to the first we can
   for(p = servinfo; p != NULL; p = p->ai_next) {
-    if ((_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+    if ((_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == INVALID_SOCKET) {//dhc-modify for windows
       perror("client: socket");
       continue;
     }
     
     if (connect(_sock, p->ai_addr, p->ai_addrlen) == -1) {
-      close(_sock);
+      closesocket(_sock);//dhc-modify for windows
       perror("client: connect");
       continue;
     }
@@ -92,13 +92,12 @@ void TsdbPointRecord::dbConnect() throw(RtxException) {
     return ;
   }
   
-  inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-            s, sizeof s);
+  inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),s, sizeof s);
   printf("client: connecting to %s\n", s);
   
   freeaddrinfo(servinfo); // all done with this structure
   
-  if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+  if ((numbytes = recv(_sock, buf, maxDataSize-1, 0)) == -1) {//dhc modify
     perror("recv");
     exit(1);
   }
@@ -107,37 +106,44 @@ void TsdbPointRecord::dbConnect() throw(RtxException) {
   
   printf("client: received '%s'\n",buf);
   
-  close(sockfd);
+  closesocket(_sock);//dhc modify
   
 }
 
 
 
 bool TsdbPointRecord::isConnected() {
-  return (_sock != -1);
+  return (_sock !=INVALID_SOCKET);//dhc modify 
 }
 
+//dhc enable comment 
+//std::vector<Point> TsdbPointRecord::selectRange(const std::string& id, time_t startTime, time_t endTime) {
+//  
+//}
+//
+//Point TsdbPointRecord::selectNext(const std::string& id, time_t time) {
+//  
+//}
+//
+//Point TsdbPointRecord::selectPrevious(const std::string& id, time_t time) {
+//  
+//}
+//
+//void TsdbPointRecord::insertSingle(const std::string& id, Point point) {
+//  
+//}
+//
+//void TsdbPointRecord::insertRange(const std::string& id, std::vector<Point> points) {
+//  
+//}
+//dhc add function for modifyinfg error
+void *get_in_addr( SOCKADDR *sa)
+{
+	//if(sa->sa_family==AF_INET)
+	return &(((SOCKADDR_IN *)sa)->sin_addr);
+	//return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 
-std::vector<Point> TsdbPointRecord::selectRange(const std::string& id, time_t startTime, time_t endTime) {
-  
 }
-
-Point TsdbPointRecord::selectNext(const std::string& id, time_t time) {
-  
-}
-
-Point TsdbPointRecord::selectPrevious(const std::string& id, time_t time) {
-  
-}
-
-void TsdbPointRecord::insertSingle(const std::string& id, Point point) {
-  
-}
-
-void TsdbPointRecord::insertRange(const std::string& id, std::vector<Point> points) {
-  
-}
-
 
 
 

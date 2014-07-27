@@ -51,9 +51,9 @@
 #define RTX_MILLIGRAM               RTX::Units(.000001,      1,0,0)
 #define RTX_GRAM                    RTX::Units(.001,         1,0,0)
 #define RTX_KILOGRAM                RTX::Units(1,            1,0,0)
-// concentration
+// concentration-浓度
 #define RTX_MILLIGRAMS_PER_LITER    RTX::Units(.001,         1,-3,0)
-// conductance
+// conductance-电导率
 #define RTX_MICROSIEMENS_PER_CM     RTX::Units(.0001,        -1,-3,3,2)
 // velocity
 #define RTX_METER_PER_SECOND        RTX::Units(1,            0,1,-1)

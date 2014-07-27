@@ -78,7 +78,7 @@ namespace RTX {
     virtual void insertSingle(const std::string& id, Point point);
     virtual void insertRange(const std::string& id, std::vector<Point> points);
     virtual void removeRecord(const std::string& id);
-    virtual void truncate();
+	virtual void truncate();
     
   private:
     bool _connected;

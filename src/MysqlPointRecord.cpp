@@ -66,23 +66,50 @@ MysqlPointRecord::~MysqlPointRecord() {
 void MysqlPointRecord::dbConnect() throw(RtxException) {
   
   bool databaseDoesExist = false;
-  
+ /* 
   if (RTX_STRINGS_ARE_EQUAL(this->uid(), "") ||
       RTX_STRINGS_ARE_EQUAL(this->pwd(), "") ||
       RTX_STRINGS_ARE_EQUAL(this->db(), "") ) {
     errorMessage = "Incomplete Login";
     return;
+  }*/ //dhc disable 
+  std::string tokenizedString = this->connectionString();
+  std::map<std::string, std::string> kvPairs;
+  boost::regex kvReg("([^=]+)=([^;]+);?"); // key - value pair
+  boost::sregex_iterator it(tokenizedString.begin(), tokenizedString.end(), kvReg), end;
+  for ( ; it != end; ++it){
+	  kvPairs[(*it)[1]] = (*it)[2];
+	  cout << "key: " << (*it)[1] << "   value: " << (*it)[2] << endl;
   }
-  
+ // cout<<"print completed"<<endl;
+  // if any of the keys are missing, just return.
+  if (kvPairs.find("HOST") == kvPairs.end() ||
+	  kvPairs.find("UID") == kvPairs.end() ||
+	  kvPairs.find("PWD") == kvPairs.end() ||
+	  kvPairs.find("DB") == kvPairs.end() )
+  {
+	  cout<<"Oh ,Some Bad thing have happened ! That seems  lack of one of license !"<<endl;//dhc modify
+	  return;  
+	  // todo -- throw something?
+  }
+  else 
+  {
+	  cout<<"Oh Very Good ,All licenses  are fair ! "<<endl;//dhc modify 
+  }
+
+  setHost( kvPairs["HOST"]);
+  setUid( kvPairs["UID"]);
+  setPwd(kvPairs["PWD"]);
+  setDb(kvPairs["DB"]);
   
   try {
-    _driver = get_driver_instance();
+    _driver = get_driver_instance();// dhc-初始化驱动
     _driver->threadInit();
-    _mysqlCon.reset( _driver->connect(_connectionInfo.host, _connectionInfo.uid, _connectionInfo.pwd) );
+    _mysqlCon.reset( _driver->connect(_connectionInfo.host, _connectionInfo.uid, _connectionInfo.pwd) );//dhc-// 建立链接
     _mysqlCon->setAutoCommit(false);
     
     // test for database exists
-    
+    //遍历mysql数据库名称，匹配给定数据库
     boost::shared_ptr<sql::Statement> st( _mysqlCon->createStatement() );
     sql::DatabaseMetaData *meta =  _mysqlCon->getMetaData();
     boost::shared_ptr<sql::ResultSet> results( meta->getSchemas() );
@@ -104,15 +131,15 @@ void MysqlPointRecord::dbConnect() throw(RtxException) {
       updateString += _connectionInfo.db;
       st->executeUpdate(updateString);
       _mysqlCon->commit();
-      _mysqlCon->setSchema(_connectionInfo.db);
+      _mysqlCon->setSchema(_connectionInfo.db);//设定当前数据库为_connectionInfo.db
       // create tables
       st->executeUpdate(RTX_CREATE_POINT_TABLE_STRING);
       st->executeUpdate(RTX_CREATE_TSKEY_TABLE_STRING);
       _mysqlCon->commit();
-      //cout << "Created new Database: " << database << endl;
+      cout << "Created new Database: " << _connectionInfo.db<< endl;
     }
     
-    _mysqlCon->setSchema(_connectionInfo.db);
+    _mysqlCon->setSchema(_connectionInfo.db);//设定当前数据库为_connectionInfo.db
     
     
     // build the queries, since preparedStatements can't specify table names.
@@ -385,7 +412,7 @@ void MysqlPointRecord::insertRange(const std::string& id, std::vector<Point> poi
 }
 
 void MysqlPointRecord::insertSingleNoCommit(const std::string& id, Point point) {
-  _singleInsert->setInt(1, (int)point.time);
+	_singleInsert->setInt(1, (int)point.time);
   // todo -- check this: _singleInsert->setUInt64(1, (uint64_t)time);
   _singleInsert->setDouble(2, point.value);
   _singleInsert->setInt(3, point.quality);
@@ -400,8 +427,9 @@ void MysqlPointRecord::insertSingleNoCommit(const std::string& id, Point point) 
   if (affected == 0) {
     // this may happen if there's already data matching this time/id primary index.
     // the insert was ignored.
-    //cerr << "zero rows inserted" << endl;
+ // cerr << "zero rows inserted" << endl;//dhc enable
   }
+   //_connection->commit();
 }
 
 void MysqlPointRecord::removeRecord(const string& id) {
@@ -420,7 +448,7 @@ void MysqlPointRecord::removeRecord(const string& id) {
 }
 
 void MysqlPointRecord::truncate() {
-  try {
+	try {
     string truncatePoints = "TRUNCATE TABLE points";
     string truncateKeys = "TRUNCATE TABLE timeseries_meta";
     
@@ -430,7 +458,7 @@ void MysqlPointRecord::truncate() {
     truncateKeysStmt.reset( _mysqlCon->createStatement() );
     
     truncatePointsStmt->executeUpdate(truncatePoints);
-    truncateKeysStmt->executeUpdate(truncateKeys);
+    //truncateKeysStmt->executeUpdate(truncateKeys);
     
     _mysqlCon->commit();
   }
